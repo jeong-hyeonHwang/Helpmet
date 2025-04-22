@@ -114,29 +114,61 @@ async def connect_and_stream():
         stream.release()
         cv2.destroyAllWindows()
 
+
+
+printed_alert_true_ids = set()
+printed_alert_false_ids = set()
+
 async def receive_responses(websocket):
+    global printed_alert_true_ids, printed_alert_false_ids
+
     try:
         while True:
             response = await websocket.recv()
             data = json.loads(response)
-            
+
             if data.get("type") == "analysis_result" and data.get("approaching_objects"):
                 approaching = data.get("approaching_objects")
-                print("\n====== 접근 중인 객체 감지! ======")
+
+                filtered = []
+
                 for obj in approaching:
                     class_name = obj.get("class")
-                    distance = obj.get("distance", 0.0)
-                    speed = obj.get("speed", 0.0)
+                    track_id = obj.get("track_id")
                     is_alert = obj.get("alert", False)
-                    alert_reason = obj.get('alert_reason')
 
-                    print(is_alert)
+                    # 이미 출력한 track_id는 건너뛰기
+                    if is_alert and track_id in printed_alert_true_ids:
+                        continue
+                    if not is_alert and track_id in printed_alert_false_ids:
+                        continue
+
+                    # 사람은 위험 상황이 아니면 출력하지 않음
+                    if not is_alert and class_name == "person":
+                        continue
+
+                    # 아직 출력하지 않은 경우만 추가
+                    filtered.append(obj)
                     if is_alert:
-                        print(f"🚨 [경고] 객체: {class_name}, 거리: {distance:.2f}, 속도: {speed:.4f}, 이유: {alert_reason}")
+                        printed_alert_true_ids.add(track_id)
                     else:
-                        print(f"객체: {class_name}, 거리: {distance:.2f}, 속도: {speed:.4f}")
-                print("===============================\n")
+                        printed_alert_false_ids.add(track_id)
 
+                if filtered:
+                    print("\n====== 접근 중인 객체 감지! ======")
+                    for obj in filtered:
+                        distance = obj.get("distance", 0.0)
+                        speed = obj.get("speed", 0.0)
+                        is_alert = obj.get("alert", False)
+                        alert_reason = obj.get('alert_reason')
+                        track_id = obj.get('track_id')
+
+                        if is_alert:
+                            print(f"🚨 [경고] 객체: {class_name} id:{track_id}, 거리: {distance:.2f}, 속도: {speed:.4f}, 이유: {alert_reason}")
+                        else:
+                            print(f"객체: {class_name} id:{track_id} 거리: {distance:.2f}, 속도: {speed:.4f}")
+                    print("===============================\n")
+                
             elif data.get("type") == "status":
                 print(f"서버 상태 메시지: {data.get('status')}")
 
