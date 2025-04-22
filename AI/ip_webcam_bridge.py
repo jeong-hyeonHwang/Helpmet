@@ -9,7 +9,7 @@ import threading
 
 # 설정
 WEBCAM_URL = "http://192.168.0.10:8080/video"
-SERVER_WS_URL = "ws://192.168.0.100:8000/ws/test-client-1"
+SERVER_WS_URL = "ws://192.168.0.100:8000/ws/test-client-2"
 
 # 프레임 스트림 클래스 (지연 최소화)
 class VideoStream:
@@ -67,7 +67,7 @@ async def connect_and_stream():
             response_task = asyncio.create_task(receive_responses(websocket))
 
             frame_count = 0
-            skip_factor = 12  # 분석용 프레임 스킵 비율
+            skip_factor = 8  # 분석용 프레임 스킵 비율
 
             try:
                 while True:

@@ -12,9 +12,13 @@ import time
 from ultralytics import YOLO
 import asyncio
 from typing import List, Dict
+from collections import defaultdict
+
+# 확장된 타입 힌트
+from typing import Dict, List, Optional, Tuple, Union
 
 # FastAPI 앱 초기화
-app = FastAPI(title="YOLO Object Approach Detection Server")
+app = FastAPI(title="YOLO Object Approach Detection Server with ByteTrack")
 
 # 정적 파일 및 템플릿 설정
 templates = Jinja2Templates(directory="templates")
@@ -23,7 +27,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # YOLO 모델 및 설정
 MODEL = 'yolov8n.pt'
 INTEREST_CLASSES = [0, 1, 2, 3, 5, 7]  # person, bicycle, car, motorcycle, bus, truck
-HISTORY_FRAMES = 10
+HISTORY_FRAMES = 5
 AREA_THRESHOLD = 0.10
 MIN_CONFIDENCE = 0.40
 
@@ -31,11 +35,16 @@ MIN_CONFIDENCE = 0.40
 model = YOLO(MODEL)
 print(f"YOLO 모델 '{MODEL}' 로드 완료!")
 
+# YOLO 모델을 추적 모드로 설정
+print("YOLO 모델을 추적 모드로 설정합니다...")
+
 # 클라이언트 관리 클래스
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
         self.clients_data: Dict[str, Dict] = {}
+        # 클라이언트별 트래커 관리
+        self.trackers: Dict[str, YOLO] = {}
 
     async def connect(self, websocket: WebSocket, client_id: str):
         await websocket.accept()
@@ -44,11 +53,14 @@ class ConnectionManager:
             "object_history": {},
             "analysis_active": False
         }
+        # 클라이언트별 트래커 생성 (YOLO 모델의 추적 인스턴스)
+        self.trackers[client_id] = YOLO(MODEL)
         print(f"클라이언트 {client_id} 연결됨. 현재 {len(self.active_connections)}개 연결")
 
     def disconnect(self, client_id: str):
         self.active_connections.pop(client_id, None)
         self.clients_data.pop(client_id, None)
+        self.trackers.pop(client_id, None)
         print(f"클라이언트 {client_id} 연결 해제. 현재 {len(self.active_connections)}개 연결")
 
     async def send_message(self, message: str, client_id: str):
@@ -64,6 +76,9 @@ class ConnectionManager:
 
     def get_client_history(self, client_id: str) -> Dict:
         return self.clients_data.get(client_id, {}).get("object_history", {})
+
+    def get_tracker(self, client_id: str) -> YOLO:
+        return self.trackers.get(client_id)
 
 manager = ConnectionManager()
 
@@ -92,6 +107,7 @@ async def get_index(request: fastapi.Request):
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await manager.connect(websocket, client_id)
     try:
+        frame_id = 0
         while True:
             data = await websocket.receive_text()
             try:
@@ -107,37 +123,68 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 elif message.get("type") == "frame":
                     if not manager.get_analysis_state(client_id):
                         continue
+
+                    frame_id += 1
                     img_data = base64.b64decode(message.get("image"))
                     nparr = np.frombuffer(img_data, np.uint8)
                     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
                     if frame is None:
                         continue
-                    results = model(frame, conf=MIN_CONFIDENCE, classes=INTEREST_CLASSES)
+
+                    client_tracker = manager.get_tracker(client_id)
+                    if client_tracker:
+                        results = client_tracker.track(
+                            frame, conf=MIN_CONFIDENCE, classes=INTEREST_CLASSES,
+                            persist=True, tracker="bytetrack.yaml")
+                    else:
+                        results = model(frame, conf=MIN_CONFIDENCE, classes=INTEREST_CLASSES)
+
+                    online_targets = []
+                    if results and len(results) > 0 and hasattr(results[0], 'boxes') and hasattr(results[0].boxes, 'id') and results[0].boxes.id is not None:
+                        online_targets = results[0].boxes
+
                     approaching_objects = []
-                    current_objects = set()
                     object_history = manager.get_client_history(client_id)
                     frame_height, frame_width = frame.shape[:2]
 
-                    if len(results) > 0:
-                        boxes = results[0].boxes
-                        for i, box in enumerate(boxes):
-                            x1, y1, x2, y2 = map(int, box.xyxy[0])
-                            conf = float(box.conf[0])
-                            cls_id = int(box.cls[0])
-                            cls_name = model.names[cls_id]
-                            w = x2 - x1
-                            h = y2 - y1
+                    if len(online_targets) > 0:
+                        for i, det in enumerate(online_targets):
+                            if hasattr(det, 'id') and det.id is not None:
+                                track_id = int(det.id[0])
+                                obj_id = f"track_{track_id}"
+                            else:
+                                obj_id = f"temp_{frame_id}_{i}"
+                                track_id = i
+                            
+                            # 경계 상자
+                            x1, y1, x2, y2 = map(int, det.xyxy[0])
+                            w, h = x2 - x1, y2 - y1
                             cx = x1 + w // 2
                             cy = y1 + h // 2
-                            obj_id = f"{cls_id}_{i}"
-                            current_objects.add(obj_id)
+
+                            # 클래스 ID 및 이름
+                            cls_id = int(det.cls[0])
+                            cls_conf = float(det.conf[0])
+                            cls_name = model.names.get(cls_id, "unknown")
+
+                            # 디버깅 로그 추가
+                            print(f"[Frame {frame_id}] Track ID: {track_id} | Class: {cls_name} | Confidence: {cls_conf:.2f} | Box: ({x1}, {y1}, {x2}, {y2})")
+
+                            # 객체 히스토리 관리
                             if obj_id not in object_history:
-                                object_history[obj_id] = []
+                                object_history[obj_id] = {"positions": []}
+
                             curr_box = (cx, cy, w, h)
-                            object_history[obj_id].append(curr_box)
-                            if len(object_history[obj_id]) > HISTORY_FRAMES:
-                                object_history[obj_id].pop(0)
-                            is_approaching, approach_speed = calculate_approaching(curr_box, object_history[obj_id])
+                            object_history[obj_id]["positions"].append(curr_box)
+                            if len(object_history[obj_id]["positions"]) > HISTORY_FRAMES:
+                                object_history[obj_id]["positions"].pop(0)
+
+                            # 접근 계산
+                            is_approaching, approach_speed = calculate_approaching(
+                                curr_box, 
+                                object_history[obj_id]["positions"]
+                            )
+
                             relative_size = h / frame_height
                             distance = 1.0 - relative_size
 
@@ -161,12 +208,14 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                             if norm_dist <= ALERT_DIST_THRESHOLD:
                                 alert_reasons.append("bottom center close to screen center")
 
-                            print(alert_reasons)
                             is_alert = len(alert_reasons) > 1 or distance <= ALERT_DISTANCE_THRESHOLD
+                            cls_name = model.names.get(cls_id, "unknown")
 
+                            # 결과 저장
                             approaching_objects.append({
+                                "track_id": int(track_id),
                                 "class": cls_name,
-                                "confidence": float(conf),
+                                "confidence": float(cls_conf),
                                 "distance": float(distance),
                                 "speed": float(approach_speed),
                                 "box": [int(x1), int(y1), int(x2), int(y2)],
@@ -174,14 +223,10 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                                 "alert_reason": ", ".join(alert_reasons) if is_alert else ""
                             })
 
-                    old_objects = set(object_history.keys()) - current_objects
-                    for obj_id in old_objects:
-                        object_history.pop(obj_id, None)
-
                     result_data = {
                         "type": "analysis_result",
                         "approaching_objects": approaching_objects,
-                        "total_objects": len(current_objects),
+                        "total_objects": len(approaching_objects),
                         "timestamp": time.time()
                     }
                     await manager.send_message(json.dumps(result_data), client_id)
@@ -199,7 +244,8 @@ async def check_status():
     return {
         "status": "online",
         "model": MODEL,
-        "connected_clients": len(manager.active_connections)
+        "connected_clients": len(manager.active_connections),
+        "tracking": "ByteTrack"
     }
 
 if __name__ == "__main__":
