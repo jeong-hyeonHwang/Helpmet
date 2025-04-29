@@ -1,10 +1,15 @@
 package com.a303.helpmet.presentation.feature.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 
@@ -13,20 +18,39 @@ fun NavigationScreen(
     onFinish: () -> Unit,
     viewModel: NavigationViewModel = koinViewModel()
 ) {
-    val progress by viewModel.progress.collectAsState()
-    LaunchedEffect(Unit) { viewModel.startNavigation() }
+    val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
+
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val streamingViewHeight = screenWidth * 3 / 4
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text("내비게이션 진행 중: $progress%")
-        Spacer(Modifier.height(16.dp))
-        if (progress >= 100) {
-            Button(onClick = onFinish) {
-                Text("안내 종료")
-            }
+        if (isActiveStreamingView) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(streamingViewHeight).background(Color.Black)
+            )
         }
+
+        // 카메라 뷰 토클
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                .clickable { viewModel.toggleStreaming() }, contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier.width(60.dp).height(6.dp).clip(RoundedCornerShape(3.dp))
+                    .background(Color.Gray)
+            )
+        }
+
+        // 지도
+        Box(
+            modifier = Modifier.fillMaxWidth().weight(1f).background(Color.Yellow)
+        )
+
+        // 안내 멘트
+        Box(
+            modifier = Modifier.fillMaxWidth().height(100.dp).background(Color.White)
+        )
     }
 }
