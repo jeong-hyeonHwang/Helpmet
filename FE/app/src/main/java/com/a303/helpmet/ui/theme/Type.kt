@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.a303.helpmet.R
+import androidx.compose.material3.Typography
 
 
 // Pretendard 폰트 정의 (여러 굵기 지원)
@@ -90,3 +91,9 @@ val defaultHelpmetTypography = HelpmetTypography(
 )
 
 val LocalHelpmetTypography = staticCompositionLocalOf { defaultHelpmetTypography }
+
+fun HelpmetTypography.toMaterialTypography(): Typography = Typography(
+    bodyLarge = bodyLarge,
+    bodyMedium = bodyMedium,
+    bodySmall = bodySmall
+)

@@ -35,6 +35,12 @@ fun DesignTestScreen() {
                 tint = HelpmetTheme.colors.black1,
                 modifier = Modifier.size(48.dp)
             )
+
+            Text("헬멧이 연결되었습니다")
+            Text(
+                text = "헬멧이 연결되었습니다",
+                style = HelpmetTheme.typography.bodyLarge
+            )
             Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = HelpmetTheme.colors.primary,

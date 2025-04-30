@@ -16,7 +16,7 @@ fun HelpmetTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
             background = Color.White
         ),
-        typography = MaterialTheme.typography,
+        typography = defaultHelpmetTypography.toMaterialTypography(),
         content = {
             CompositionLocalProvider(
                 LocalHelpmetColors provides helpmetColors,
