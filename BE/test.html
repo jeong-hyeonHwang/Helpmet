@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>경로 시각화</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; width: 100vw; }
+  </style>
+</head>
+<body>
+  <div id="map">로딩 중...</div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const from = { lat: 37.5665, lon: 126.9780 };  // 서울 시청
+    const to = { lat: 37.5700, lon: 126.9820 };    // 경복궁 근처
+
+    const url = `http://localhost:8000/route?from_lat=${from.lat}&from_lon=${from.lon}&to_lat=${to.lat}&to_lon=${to.lon}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const route = data.route;
+        const instructions = data.instructions;
+
+        const map = L.map('map').setView(route[0], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 경로 그리기
+        L.polyline(route, { color: 'blue', weight: 5 }).addTo(map);
+
+        // 시작/도착 마커
+        L.marker(route[0], { title: "출발지" }).addTo(map).bindPopup("출발지");
+        L.marker(route[route.length - 1], { title: "도착지" }).addTo(map).bindPopup("도착지");
+
+        // 안내 마커
+        instructions.forEach(inst => {
+          const { lat, lon } = inst.location;
+          const marker = L.marker([lat, lon]).addTo(map);
+          marker.bindPopup(inst.message);
+        });
+      })
+      .catch(err => {
+        console.error("경로 요청 실패:", err);
+        alert("경로 요청 중 오류 발생");
+      });
+  </script>
+</body>
+</html>
