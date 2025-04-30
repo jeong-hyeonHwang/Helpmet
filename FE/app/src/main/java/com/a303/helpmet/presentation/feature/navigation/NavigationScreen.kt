@@ -11,6 +11,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import com.kakao.vectormap.LatLng
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -23,34 +24,53 @@ fun NavigationScreen(
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val streamingViewHeight = screenWidth * 3 / 4
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
             Box(
-                modifier = Modifier.fillMaxWidth().height(streamingViewHeight).background(Color.Black)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(streamingViewHeight)
+                    .background(Color.Black)
             )
         }
 
-        // 카메라 뷰 토클
+        // 카메라 뷰 토글
         Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-                .clickable { viewModel.toggleStreaming() }, contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .clickable { viewModel.toggleStreaming() },
+            contentAlignment = Alignment.Center
         ) {
             Box(
-                modifier = Modifier.width(60.dp).height(6.dp).clip(RoundedCornerShape(3.dp))
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
                     .background(Color.Gray)
             )
         }
 
-        // 지도
+        // 지도 영역에 MapScreen 삽입
         Box(
-            modifier = Modifier.fillMaxWidth().weight(1f).background(Color.Yellow)
-        )
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            MapScreen(
+                defaultPosition = LatLng.from(37.394660, 127.111182),
+                defaultZoom = 15
+            )
+        }
 
         // 안내 멘트
         Box(
-            modifier = Modifier.fillMaxWidth().height(100.dp).background(Color.White)
-        )
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(Color.White)
+        ) {
+            // 필요 안내 UI
+        }
     }
 }

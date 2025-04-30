@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,18 +8,32 @@ plugins {
     id("com.google.devtools.ksp") version "2.0.21-1.0.28"
 }
 
+val localProps = Properties().apply {
+    val propFile = rootProject.file("local.properties")
+    if (propFile.exists()) {
+        load(FileInputStream(propFile))
+    }
+}
+val kakaoKey: String = localProps.getProperty("kakao.map.api.key") ?: ""
+
 android {
     namespace = "com.a303.helpmet"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.a303.helpmet"
-        minSdk = 34
+        minSdk = 33
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "KAKAO_MAPS_API_KEY",
+            "\"${kakaoKey}\""
+        )
     }
 
     buildTypes {
@@ -37,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -51,6 +69,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.navigation:navigation-compose:2.5.3")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(libs.play.services.location)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     // --- DI ---
@@ -78,4 +97,8 @@ dependencies {
 
     // --- Test ---
     testImplementation(libs.junit)
+
+    // --- Kakao ---
+    implementation("com.kakao.maps.open:android:2.12.8")
+    implementation("com.kakao.sdk:v2-all:2.11.0")
 }
