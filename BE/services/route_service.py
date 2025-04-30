@@ -1,7 +1,7 @@
 import osmnx as ox
 import networkx as nx
 from core.graph import get_graph
-from services.route_util import calculate_angle, get_poi_nearby
+from services.route_util import calculate_angle, get_poi_nearby, build_instruction_message
 
 def find_route(from_lat: float, from_lon: float, to_lat: float, to_lon: float) -> dict:
     G = get_graph()
@@ -34,8 +34,6 @@ def find_route(from_lat: float, from_lon: float, to_lat: float, to_lon: float) -
         "distance_m": round(total_length, 1),
         "estimated_time_min": round(estimated_time_min, 1)
     }
-
-
 def find_route_with_instructions(from_lat, from_lon, to_lat, to_lon):
     G = get_graph()
     from_node = ox.distance.nearest_nodes(G, X=from_lon, Y=from_lat)
@@ -52,7 +50,23 @@ def find_route_with_instructions(from_lat, from_lon, to_lat, to_lon):
         edge_length = G.edges[route[i - 1], route[i], 0].get("length", 0)
         cumulative_distances.append(cumulative_distances[-1] + edge_length)
 
-    # 1. 회전지점만 먼저 추출
+    # route 경로와 자전거도로 종류 및 주요 여부 포함
+    route_segments = []
+    for i in range(len(route) - 1):
+        n1, n2 = route[i], route[i + 1]
+        edge = G.edges[n1, n2, 0]
+        cycleway_type = edge.get("cycleway", None)
+        is_priority_cycleway = cycleway_type in {"track", "lane"}
+
+        segment = {
+            "from": {"lat": G.nodes[n1]["y"], "lon": G.nodes[n1]["x"]},
+            "to": {"lat": G.nodes[n2]["y"], "lon": G.nodes[n2]["x"]},
+            "cycleway_type": cycleway_type,
+            "is_cycleway": is_priority_cycleway,
+            "length_m": edge.get("length", 0)
+        }
+        route_segments.append(segment)
+
     turn_instructions = []
     turn_indexes = []
 
@@ -61,21 +75,17 @@ def find_route_with_instructions(from_lat, from_lon, to_lat, to_lon):
         if angle > 30:
             distance = round(cumulative_distances[i])
             lat, lon = coords[i]
-            pois = get_poi_nearby(lat, lon)
-            landmark = pois[0] if pois else None
-            message = f"{landmark} 앞에서 {action}하세요" if landmark else f"약 {distance}m 앞에서 {action}하세요"
+            message = build_instruction_message(G, route[i], action, distance, lat, lon)
 
             turn_instructions.append({
                 "index": i,
                 "location": {"lat": lat, "lon": lon},
                 "distance_to_here_m": distance,
                 "action": action,
-                "landmark": landmark,
                 "message": message
             })
             turn_indexes.append(i)
 
-    # 2. 직진 구간 안내 생성
     linear_instructions = []
     bounds = [0] + turn_indexes + [len(coords) - 1]
 
@@ -103,7 +113,7 @@ def find_route_with_instructions(from_lat, from_lon, to_lat, to_lon):
     all_instructions.sort(key=lambda x: x["index"])
 
     return {
-        "route": coords,
+        "route": route_segments,
         "distance_m": round(total_length, 1),
         "estimated_time_min": round(estimated_time_min, 1),
         "instructions": all_instructions
