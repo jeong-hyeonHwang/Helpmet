@@ -10,6 +10,13 @@ class HelmetCheckViewModel : ViewModel() {
 
     fun checkConnection() {
         // TODO: 실제 블루투스 헬멧 연결 확인 로직
-        _isConnected.value = true  // 임시: 항상 연결된 것으로 처리
+
+        // 임시: 연결된 상태인 경우 블루투스 연결 해제
+        if(_isConnected.value == true) {
+            _isConnected.value = false
+        }else{
+            _isConnected.value = true  // 임시: 항상 연결된 것으로 처리
+        }
     }
+
 }

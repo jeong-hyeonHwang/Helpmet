@@ -19,6 +19,7 @@
     <!-- 시작 버튼 -->
     <string name="start">시작하기</string>
     <string name="begin_connection">연결 시작</string>
+    <string name="end_connection">연결 종료</string>
 
     <!-- 헬멧 선택 -->
     <string name="helmet_found">%1$s 헬멧을 찾았습니다.</string>
