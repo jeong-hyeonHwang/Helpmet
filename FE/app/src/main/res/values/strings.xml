@@ -1,3 +1,54 @@
 <resources>
-    <string name="app_name">Helpmet</string>
+    <!-- 앱 타이틀 -->
+    <string name="app_name">헬프멧</string>
+
+    <!-- 안전 안내 문구 -->
+    <string name="safety_info">안전한 라이딩을 위한 정보,\n보이지 않는 순간까지 지켜드립니다.</string>
+
+    <!-- 연결 상태 -->
+    <string name="connect_helmet_prompt">헬멧을 먼저 연결해주세요.</string>
+    <string name="connect_helmet_success">헬멧과 연결되었습니다!</string>
+
+    <!-- 코스 추천 -->
+    <string name="recommend_course_hangang">한강 주행 코스 추천</string>
+    <string name="recommend_course_with_ddareungi">따릉이와 함께 달려볼까요?</string>
+
+    <!-- 음성 가이드 -->
+    <string name="voice_guide">음성 정보 가이드</string>
+
+    <!-- 시작 버튼 -->
+    <string name="start">시작하기</string>
+    <string name="begin_connection">연결 시작</string>
+
+    <!-- 헬멧 선택 -->
+    <string name="helmet_found">%1$s 헬멧을 찾았습니다.</string>
+    <string name="confirm_connect_helmet">해당 헬멧과 연결하시겠어요?</string>
+
+    <!-- 주행 시간 설정 -->
+    <string name="set_ride_time">주행 시간 설정</string>
+    <string name="prompt_set_time">원하시는 주행 시간을 설정해주세요.</string>
+    <string name="minutes_format">%1$d분</string>
+    <string name="error_min_time">최소 %1$d분 이상의 코스만 설정할 수 있어요.</string>
+    <string name="error_max_time">최대 %1$d분 이하의 코스만 설정할 수 있어요.</string>
+
+    <!-- 코스 안내 시작 -->
+    <string name="start_course_recommend">주행 코스 추천 시작하기</string>
+    <string name="start_navigation">안내 시작하기</string>
+
+    <!-- 코스 상세 -->
+    <string name="course_number">주행 코스 %1$d</string>
+    <string name="course_distance">%1$.1fkm</string>
+    <string name="start_station">시작 대여소: %1$s</string>
+    <string name="end_station">도착 대여소: %1$s</string>
+
+    <!-- 위치 기반 추천 설명 -->
+    <string name="nearby_course_info">
+        현재 사용자의 위치를 기반으로\n가장 가까운 근처 한강의\n자전거 드라이브 코스를 추천해드려요!
+    </string>
+
+    <!-- 위험 감지 -->
+    <string name="rear_warning">후방에 위험 감지</string>
+
+    <!-- 주변 탐색 -->
+    <string name="scanning_surroundings">%1$s을 탐색하고 있습니다.</string>
 </resources>
