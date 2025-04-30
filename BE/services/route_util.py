@@ -1,6 +1,17 @@
 import osmnx as ox
 import math
 
+def build_instruction_message(G, node_id, action, distance, lat, lon):
+    if is_crosswalk_node(node_id, G):
+        return "횡단보도를 건너세요"
+
+    pois = get_poi_nearby(lat, lon)
+    landmark = pois[0] if pois else None
+
+    if landmark:
+        return f"{landmark} 앞에서 {action}하세요"
+    else:
+        return f"약 {distance}m 앞에서 {action}하세요"
 
 def calculate_angle(p1, p2, p3):
     def vector(a, b):
