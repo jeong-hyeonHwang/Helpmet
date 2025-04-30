@@ -4,32 +4,46 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.material3.*
+import androidx.compose.ui.res.stringResource
+import com.a303.helpmet.R
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
+import com.a303.helpmet.ui.theme.HelpmetTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HelmetInfoView(
     viewModel: HelmetCheckViewModel = koinViewModel(),
 ) {
-    Modifier.padding(32.dp)
     val isConnected by viewModel.isConnected.collectAsState()
-    Column(
-        modifier = Modifier.fillMaxWidth(), //.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ){
-        // String.xml 내에 있음
-//        Row {
-//            Text("헬프")
-//            Text("멧")
-//        }
-//        Text("안전한 라이딩을 위한 정보,")
-//        Text("보이지 않는 순간까지 지켜드립니다")
 
-        Text("helpmet app info")
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Row {
+            Text(
+                text = "헬프",
+                style = HelpmetTheme.typography.appTitle,
+                color = HelpmetTheme.colors.primary
+            )
+            Text(
+                text = "멧",
+                style = HelpmetTheme.typography.appTitle,
+                color = HelpmetTheme.colors.black1
+            )
+        }
+        Text(
+            text = stringResource(R.string.safety_info),
+            style = HelpmetTheme.typography.bodySmall,
+            color = HelpmetTheme.colors.gray2
+        )
     }
-    Modifier.padding(32.dp)
+
+    // 두 Column 사이 간격
+    Spacer(modifier = Modifier.height(32.dp))
+
     Column {
         Text("헬멧 연결 정보")
         Button(onClick = { viewModel.checkConnection() }) {
