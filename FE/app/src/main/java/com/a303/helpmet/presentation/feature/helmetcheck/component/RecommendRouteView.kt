@@ -72,6 +72,6 @@ fun RecommendRouteView(
 fun HelpmetCheckScreenPreview() {
     HelmetCheckScreen(
         viewModel = HelmetCheckViewModel(),
-        onSuccess = {}
+        onSetRideTime = {}
     )
 }
