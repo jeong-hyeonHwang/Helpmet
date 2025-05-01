@@ -18,6 +18,7 @@ import com.a303.helpmet.presentation.feature.NavRoutes
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
 import com.a303.helpmet.presentation.feature.navigation.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
+import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
 
 // MainActivity.kt
@@ -36,14 +37,24 @@ class MainActivity : ComponentActivity() {
                     // 1) 헬멧 연결 확인 화면
                     composable("helmet_check") {
                         HelmetCheckScreen(
-                            onSuccess = {
-                                // 헬멧 연결 확인되면 2번 화면으로
+                            onSetRideTime = {
+                                // 주행 코스 추천 화면 이동 전 주행 시간 설정 화면으로
+                                navController.navigate("ride_time_set")
+                            }
+                        )
+                    }
+
+                    // 2) 코스 추천 전 주행 시간 설정 화면
+                    composable("ride_time_set"){
+                        RideTimeSetScreen(
+                            onRecommendCourse = {
+                                // 주행 시간 설정되면 3번 화면으로
                                 navController.navigate("pre_ride")
                             }
                         )
                     }
 
-                    // 2) 코스 안내 시작 전 화면
+                    // 3) 코스 안내 시작 전 화면
                     composable("pre_ride") {
                         PreRideScreen(
                             onStartRide = {
@@ -53,7 +64,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 3) 내비게이션 화면
+                    // 4) 내비게이션 화면
                     composable("navigation") {
                         NavigationScreen(
                             onFinish = {
