@@ -1,15 +1,18 @@
 package com.a303.helpmet.presentation.feature.helmetcheck.component
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.material3.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.a303.helpmet.R
 import androidx.compose.ui.unit.dp
+import com.a303.helpmet.domain.model.HelmetConnectionState
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import org.koin.androidx.compose.koinViewModel
@@ -19,6 +22,28 @@ fun HelmetInfoView(
     viewModel: HelmetCheckViewModel = koinViewModel(),
 ) {
     val isConnected by viewModel.isConnected.collectAsState()
+    val connectionState by viewModel.connectionState.collectAsState()
+
+    val context = LocalContext.current
+    LaunchedEffect(connectionState) {
+        if (connectionState == HelmetConnectionState.Success) {
+            Toast.makeText(context, "헬멧과 연결되었습니다!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    when(connectionState){
+        HelmetConnectionState.Searching -> {
+            LoadingDialog(viewModel, "헬멧을 찾는 중입니다...")
+        }
+        HelmetConnectionState.Found -> {
+            ConnectHelmetDialog(viewModel)
+        }
+        HelmetConnectionState.Connecting -> {
+            LoadingDialog(viewModel, "헬멧과 연결 중입니다...")
+        }
+        HelmetConnectionState.Success,
+        HelmetConnectionState.Idle -> Unit
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -95,7 +120,7 @@ fun HelmetInfoView(
                                 .height(30.dp),
                             shape = RoundedCornerShape(20.dp),
                             contentPadding = PaddingValues(horizontal = 21.dp, vertical = 9.dp),
-                            onClick = { viewModel.checkConnection() }
+                            onClick = { if (isConnected) viewModel.cancelDialog() else viewModel.startSearch() }
                         ) {
                             Text(
                                 text = if (isConnected) stringResource(R.string.end_connection) else stringResource(R.string.begin_connection),
