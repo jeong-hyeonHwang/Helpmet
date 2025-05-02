@@ -19,7 +19,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun RecommendRouteView(
     viewModel: HelmetCheckViewModel = koinViewModel(),
-    onSuccess: () -> Unit
+    onHelmetChecked: () -> Unit
 ) {
     val isConnected by viewModel.isConnected.collectAsState()
     Card(
@@ -52,7 +52,7 @@ fun RecommendRouteView(
 
             Row(
                 modifier = Modifier.fillMaxWidth().clickable {
-                    onSuccess()
+                    onHelmetChecked()
                 },
                 horizontalArrangement = Arrangement.End,
             ) {
@@ -72,6 +72,6 @@ fun RecommendRouteView(
 fun HelpmetCheckScreenPreview() {
     HelmetCheckScreen(
         viewModel = HelmetCheckViewModel(),
-        onSetRideTime = {}
+        onHelmetChecked = {}
     )
 }

@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                     // 1) 헬멧 연결 확인 화면
                     composable("helmet_check") {
                         HelmetCheckScreen(
-                            onSetRideTime = {
+                            onHelmetChecked = {
                                 // 주행 코스 추천 화면 이동 전 주행 시간 설정 화면으로
                                 navController.navigate("ride_time_set")
                             }
@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                     // 2) 코스 추천 전 주행 시간 설정 화면
                     composable("ride_time_set"){
                         RideTimeSetScreen(
-                            onRecommendCourse = {
+                            onRideTimeSet = {
                                 // 주행 시간 설정되면 3번 화면으로
                                 navController.navigate("pre_ride")
                             }

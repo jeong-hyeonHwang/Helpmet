@@ -19,7 +19,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun RideTimeSetScreen(
     viewModel: RideTimeSetViewModel = koinViewModel(),
-    onRecommendCourse: () -> Unit
+    onRideTimeSet : () -> Unit
 ) {
     val rideTime by viewModel.rideTime.collectAsState()
     val warning by viewModel.warning.collectAsState()
@@ -103,7 +103,7 @@ fun RideTimeSetScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = HelpmetTheme.colors.black1
             ),
-            onClick = { onRecommendCourse() }
+            onClick = { onRideTimeSet () }
         ) {
             Text(
                 text = stringResource(R.string.start_course_recommend),
@@ -119,6 +119,6 @@ fun RideTimeSetScreen(
 fun RideTimeSettingPreview() {
     RideTimeSetScreen(
         viewModel = RideTimeSetViewModel(),
-        onRecommendCourse = {}
+        onRideTimeSet = {}
     )
 }
