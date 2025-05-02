@@ -14,7 +14,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HelmetCheckScreen(
     viewModel: HelmetCheckViewModel = koinViewModel(),
-    onSetRideTime: () -> Unit
+    onHelmetChecked: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
@@ -22,7 +22,7 @@ fun HelmetCheckScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         HelmetInfoView(viewModel)
-        RecommendRouteView(viewModel, onSetRideTime)
+        RecommendRouteView(viewModel, onHelmetChecked)
         HelmetServiceInfoView()
     }
 }
@@ -32,6 +32,6 @@ fun HelmetCheckScreen(
 fun HelpmetCheckScreenPreview() {
     HelmetCheckScreen(
         viewModel = HelmetCheckViewModel(),
-        onSetRideTime = {}
+        onHelmetChecked = {}
     )
 }
