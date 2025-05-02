@@ -1,27 +1,73 @@
 package com.a303.helpmet.presentation.feature.preride
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.koin.androidx.compose.koinViewModel
+import com.a303.helpmet.data.dto.response.CourseResponse
+import com.a303.helpmet.domain.mapper.toCourseInfo
+import com.a303.helpmet.presentation.feature.preride.component.*
 
 @Composable
 fun PreRideScreen(
-    viewModel: PreRideViewModel = koinViewModel(),
-    onStartRide: () -> Unit
+    onStartRide: (Int) -> Unit
 ) {
+    val dummyCourses = listOf(
+        CourseResponse(
+            courseNumber = 1,
+            duration = 15,
+            distanceKm = 8.5f,
+            startStation = "연제구 꽃잎길 32",
+            endStation = "성동구 와우로길 32길",
+            navId = 1
+        ),
+        CourseResponse(
+            courseNumber = 2,
+            duration = 30,
+            distanceKm = 10.5f,
+            startStation = "연제구 꽃잎길 32",
+            endStation = "성동구 와우로길 32길",
+            navId = 2
+        ),
+        CourseResponse(
+            courseNumber = 3,
+            duration = 10,
+            distanceKm = 6f,
+            startStation = "연제구 꽃잎길 32",
+            endStation = "성동구 와우로길 32길",
+            navId = 3
+        )
+    ).map { it.toCourseInfo(LocalContext.current) }
+
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Text("따릉이 코스 안내 전 화면")
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = { onStartRide() }) {
-            Text("내비게이션 시작")
+
+        Box(modifier = Modifier.fillMaxSize()){
+            PreRideMapView()
+            CourseInfoBubbleView(modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top=32.dp))
+
+            CourseCardPager(
+                modifier = Modifier.padding(bottom = 16.dp)
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth(),
+                courses = dummyCourses,
+                onStartRide = onStartRide
+            )
         }
     }
+}
+
+@Preview
+@Composable
+fun PreRidePreview(){
+    PreRideScreen(
+        onStartRide={}
+    )
 }
