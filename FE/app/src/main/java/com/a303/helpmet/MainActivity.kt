@@ -11,12 +11,16 @@ import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
 import com.a303.helpmet.presentation.feature.navigation.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.kakao.sdk.common.util.Utility.getKeyHash
 
 // MainActivity.kt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val keyHash = getKeyHash(this)
+        Log.d("HASH", keyHash)
 
         setContent {
             HelpmetTheme {
