@@ -6,4 +6,5 @@ sealed class NavRoutes(val route: String) {
     object Navigation     : NavRoutes("navigation/{courseId}") {
         fun createRoute(courseId: String) = "navigation/$courseId"
     }
+    object RideTimeSet: NavRoutes("ride_time_set")
 }
