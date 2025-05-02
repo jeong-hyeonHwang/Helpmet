@@ -2,20 +2,12 @@ package com.a303.helpmet.presentation.feature.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.a303.helpmet.domain.model.StreamingNoticeState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-@Serializable
-enum class StreamingNoticeState {
-    @SerialName("default") Default,
-    @SerialName("caution") Caution,
-    @SerialName("danger") Danger,
-}
 
 class NavigationViewModel() : ViewModel()  {
     private val _isActiveStreamingView = MutableStateFlow(true)
