@@ -1,6 +1,5 @@
 package com.a303.helpmet.presentation.feature.helmetcheck.component
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
@@ -11,7 +10,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.a303.helpmet.R
 import androidx.compose.ui.unit.dp
-import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import org.koin.androidx.compose.koinViewModel
@@ -55,10 +53,13 @@ fun HelmetInfoView(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Surface(
+            Card(
                 shape = RoundedCornerShape(10.dp),
-                shadowElevation = 4.dp,
-                color = HelpmetTheme.colors.white1,
+                elevation = CardDefaults.cardElevation(4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = HelpmetTheme.colors.white1,
+                ),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier
