@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.a303.helpmet.R
 import androidx.compose.ui.unit.dp
-import com.a303.helpmet.domain.model.HelmetConnectionState
+import com.a303.helpmet.presentation.model.HelmetConnectionState
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import org.koin.androidx.compose.koinViewModel

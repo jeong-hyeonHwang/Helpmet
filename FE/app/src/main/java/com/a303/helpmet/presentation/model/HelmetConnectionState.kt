@@ -1,4 +1,4 @@
-package com.a303.helpmet.domain.model
+package com.a303.helpmet.presentation.model
 
 enum class HelmetConnectionState {
     Idle, // 기본 상태(다이얼로그 뜨지 않음)

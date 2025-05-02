@@ -12,7 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
-import com.a303.helpmet.domain.model.RideTimeWarning
+import com.a303.helpmet.presentation.model.RideTimeWarning
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import org.koin.androidx.compose.koinViewModel
 

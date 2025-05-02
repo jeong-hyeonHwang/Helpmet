@@ -1,7 +1,7 @@
 package com.a303.helpmet.presentation.feature.preride
 
 import androidx.lifecycle.ViewModel
-import com.a303.helpmet.domain.model.RideTimeWarning
+import com.a303.helpmet.presentation.model.RideTimeWarning
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
