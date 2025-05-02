@@ -18,8 +18,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.Text
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import androidx.compose.ui.res.stringResource
+import com.a303.helpmet.R
+import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.a303.helpmet.util.postPosition.appendObjectPostposition
+import com.a303.helpmet.util.postPosition.appendSubjectPostposition
 
 
 @Composable
@@ -80,11 +83,15 @@ fun StreamingNoticeView(
 ) {
     val state by viewModel.noticeState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.updateNoticeState(StreamingNoticeState.Danger)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
-            .background(Color.White),
+            .background(HelpmetTheme.colors.white1),
         contentAlignment = Alignment.Center
     ) {
         when (state) {
@@ -97,10 +104,6 @@ fun StreamingNoticeView(
 
 @Composable
 fun DefaultNotice() {
-    val currentTime = remember {
-        LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -129,7 +132,7 @@ fun CautionNotice() {
             .background(Color.Yellow.copy(alpha = alpha)),
         contentAlignment = Alignment.Center
     ) {
-        Text("후방에 물체가 있습니다.", color = Color.Black)
+        Text(text=stringResource(R.string.rear_caution, appendSubjectPostposition("자동차")), color = Color.Black)
     }
 }
 
@@ -150,7 +153,7 @@ fun DangerNotice() {
             .background(Color(0xFFFFC0CB).copy(alpha = alpha)),
         contentAlignment = Alignment.Center
     ) {
-        Text("후방의 물체를 조심하세요!", color = Color.Black)
+        Text(text=stringResource(R.string.rear_danger, appendObjectPostposition("사람")), color = Color.Black)
     }
 
 }
