@@ -21,25 +21,25 @@ import org.koin.androidx.compose.koinViewModel
 fun HelmetInfoView(
     viewModel: HelmetCheckViewModel = koinViewModel(),
 ) {
+    val context = LocalContext.current
     val isConnected by viewModel.isConnected.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
 
-    val context = LocalContext.current
     LaunchedEffect(connectionState) {
         if (connectionState == HelmetConnectionState.Success) {
-            Toast.makeText(context, "헬멧과 연결되었습니다!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.dialog_connect_helmet_success), Toast.LENGTH_SHORT).show()
         }
     }
 
     when(connectionState){
         HelmetConnectionState.Searching -> {
-            LoadingDialog(viewModel, "헬멧을 찾는 중입니다...")
+            LoadingDialog(viewModel, stringResource(R.string.dialog_searching_helmet))
         }
         HelmetConnectionState.Found -> {
             ConnectHelmetDialog(viewModel)
         }
         HelmetConnectionState.Connecting -> {
-            LoadingDialog(viewModel, "헬멧과 연결 중입니다...")
+            LoadingDialog(viewModel, stringResource(R.string.dialog_connecting_helmet))
         }
         HelmetConnectionState.Success,
         HelmetConnectionState.Idle -> Unit

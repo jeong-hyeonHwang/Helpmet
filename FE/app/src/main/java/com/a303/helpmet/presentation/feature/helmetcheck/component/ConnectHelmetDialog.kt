@@ -59,7 +59,7 @@ fun ConnectHelmetDialog(
                         )
                     ) {
                         Text(
-                            text = "확인"
+                            text = stringResource(R.string.dialog_confirm)
                         )
                     }
                     OutlinedButton(
@@ -73,7 +73,7 @@ fun ConnectHelmetDialog(
                         )
                     ) {
                         Text(
-                            text = "취소",
+                            text = stringResource(R.string.dialog_cancel)
                         )
                     }
                 }
