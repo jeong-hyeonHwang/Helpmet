@@ -65,8 +65,8 @@ class MainActivity : ComponentActivity() {
                     composable("navigation") {
                         NavigationScreen(
                             onFinish = {
-                                // 안내 종료 시 다시 2번(pre_ride) 화면으로
-                                navController.popBackStack("pre_ride", inclusive = false)
+                                // 안내 종료 시 다시 1번(helmet_check) 화면으로
+                                navController.popBackStack("helmet_check", inclusive = false)
                             }
                         )
                     }

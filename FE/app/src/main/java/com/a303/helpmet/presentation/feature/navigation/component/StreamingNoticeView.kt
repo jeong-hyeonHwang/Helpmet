@@ -8,12 +8,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
@@ -34,9 +39,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun StreamingNoticeView(
+    onFinish: () -> Unit,
     viewModel: NavigationViewModel = koinViewModel()
 ) {
-    val state by viewModel.noticeState.collectAsState()
+    val noticeState by viewModel.noticeState.collectAsState()
 
     Box(
         modifier = Modifier
@@ -45,25 +51,70 @@ fun StreamingNoticeView(
             .background(HelpmetTheme.colors.white1),
         contentAlignment = Alignment.Center
     ) {
-        when (state) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+            ,
+            contentAlignment = Alignment.CenterEnd
+        ){
+            NavigationMoreButton(onFinish)
+        }
+
+
+        when (noticeState) {
             StreamingNoticeState.Default -> DefaultNotice()
             StreamingNoticeState.Caution -> CautionNotice()
             StreamingNoticeState.Danger -> DangerNotice()
         }
+
+
     }
 }
 
 @Composable
 fun DefaultNotice() {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Text(text="도착시간")
-        Spacer(modifier = Modifier.width(50.dp))
-        Text(text="남은 거리")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            ){
+            Icon(
+                painter = painterResource(id = R.drawable.ic_util_direction_arrow),
+                contentDescription = "시간 감소",
+                tint = HelpmetTheme.colors.black1,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Text(text="주소")
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ){
+            Text(text="도착시간")
+
+            Spacer(modifier = Modifier.width(50.dp))
+
+            Text(text="남은 거리")
+        }
     }
+
+
 }
 
 @Composable
