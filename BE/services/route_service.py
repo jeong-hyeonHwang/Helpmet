@@ -1,120 +1,100 @@
 import osmnx as ox
 import networkx as nx
-from core.graph import get_graph
-from services.route_util import calculate_angle, get_poi_nearby, build_instruction_message
+from services.route_util import (
+    calculate_angle,
+    build_instruction_message,
+)
+from services.route_util import (
+    edge_length,
+    nearest_nodes,
+    route_nodes
+)
 
-def find_route(from_lat: float, from_lon: float, to_lat: float, to_lon: float) -> dict:
-    G = get_graph()
-
-    # 출발지/도착지 좌표 → G의 노드 ID
-    from_node = ox.distance.nearest_nodes(G, X=from_lon, Y=from_lat)
-    to_node = ox.distance.nearest_nodes(G, X=to_lon, Y=to_lat)
-
-    # 경로 탐색
-    try:
-        route = nx.shortest_path(G, from_node, to_node, weight="length")
-    except nx.NetworkXNoPath:
-        raise ValueError("경로를 찾을 수 없습니다.")
-
-    # 좌표 리스트 (lat, lon)
-    coords = [(G.nodes[n]["y"], G.nodes[n]["x"]) for n in route]
-
-    # 거리 계산 (m)
-    total_length = sum(
-        G.edges[route[i], route[i + 1], 0].get("length", 0)
-        for i in range(len(route) - 1)
-    )
-
-    # 예상 소요 시간 계산 (단위: 분)
-    average_speed_kmh = 15  # 자전거 평균 속도
-    estimated_time_min = (total_length / 1000) / average_speed_kmh * 60
-
-    return {
-        "route": coords,
-        "distance_m": round(total_length, 1),
-        "estimated_time_min": round(estimated_time_min, 1)
-    }
-def find_route_with_instructions(from_lat, from_lon, to_lat, to_lon):
-    G = get_graph()
-    from_node = ox.distance.nearest_nodes(G, X=from_lon, Y=from_lat)
-    to_node = ox.distance.nearest_nodes(G, X=to_lon, Y=to_lat)
-    route = nx.shortest_path(G, from_node, to_node, weight="length")
-    coords = [(G.nodes[n]["y"], G.nodes[n]["x"]) for n in route]
-
-    total_length = sum(G.edges[route[i], route[i + 1], 0].get("length", 0) for i in range(len(route) - 1))
-    average_speed_kmh = 15
-    estimated_time_min = (total_length / 1000) / average_speed_kmh * 60
-
-    cumulative_distances = [0]
-    for i in range(1, len(route)):
-        edge_length = G.edges[route[i - 1], route[i], 0].get("length", 0)
-        cumulative_distances.append(cumulative_distances[-1] + edge_length)
-
-    # route 경로와 자전거도로 종류 및 주요 여부 포함
-    route_segments = []
-    for i in range(len(route) - 1):
-        n1, n2 = route[i], route[i + 1]
+def _build_route_segments(G, route):
+    segments = []
+    for n1, n2 in zip(route, route[1:]):
         edge = G.edges[n1, n2, 0]
-        cycleway_type = edge.get("cycleway", None)
-        is_priority_cycleway = cycleway_type in {"track", "lane"}
-
-        segment = {
+        
+        highway = edge.get("highway")
+        cycleway = edge.get("cycleway")
+        
+        segments.append({
             "from": {"lat": G.nodes[n1]["y"], "lon": G.nodes[n1]["x"]},
             "to": {"lat": G.nodes[n2]["y"], "lon": G.nodes[n2]["x"]},
-            "cycleway_type": cycleway_type,
-            "is_cycleway": is_priority_cycleway,
-            "length_m": edge.get("length", 0)
-        }
-        route_segments.append(segment)
+            "is_cycleway" : (highway == "cycleway") or (cycleway in {"track", "lane"}),
+            "length_m": edge.get("length", 0),
+        })
+    return segments
 
-    turn_instructions = []
-    turn_indexes = []
+def _cumulative_distances(G, route):
+    cum = [0]
+    for n1, n2 in zip(route, route[1:]):
+        cum.append(cum[-1] + edge_length(G, n1, n2))
+    return cum
 
+def _turn_instructions(G, route, coords, cum_dist):
+    turns, turn_idxs = [], []
     for i in range(1, len(coords) - 1):
         angle, action = calculate_angle(coords[i - 1], coords[i], coords[i + 1])
-        if angle > 30:
-            distance = round(cumulative_distances[i])
-            lat, lon = coords[i]
-            message = build_instruction_message(G, route[i], action, distance, lat, lon)
-
-            turn_instructions.append({
-                "index": i,
-                "location": {"lat": lat, "lon": lon},
-                "distance_to_here_m": distance,
-                "action": action,
-                "message": message
-            })
-            turn_indexes.append(i)
-
-    linear_instructions = []
-    bounds = [0] + turn_indexes + [len(coords) - 1]
-
-    for i in range(len(bounds) - 1):
-        start, end = bounds[i], bounds[i + 1]
-        if end - start < 1:
+        if angle <= 30:
             continue
 
-        segment_distance = sum(
-            G.edges[route[j], route[j + 1], 0].get("length", 0)
-            for j in range(start, end)
-        )
-        message = f"{round(segment_distance)}m 직진하세요"
-        lat, lon = coords[start]
+        distance = round(cum_dist[i])
+        lat, lon = coords[i]
+        turns.append({
+            "index": i,
+            "location": {"lat": lat, "lon": lon},
+            "distance_to_here_m": distance,
+            "action": action,
+            "message": build_instruction_message(
+                G, route[i], action, distance, lat, lon
+            ),
+        })
+        turn_idxs.append(i)
+    return turns, turn_idxs
 
-        linear_instructions.append({
+def _linear_instructions(G, route, coords, bounds):
+    linears = []
+    for start, end in zip(bounds, bounds[1:]):
+        if end - start < 1:
+            continue
+        seg_dist = sum(edge_length(G, route[j], route[j + 1]) for j in range(start, end))
+        lat, lon = coords[start]
+        linears.append({
             "index": start,
             "location": {"lat": lat, "lon": lon},
-            "distance_m": round(segment_distance),
+            "distance_m": round(seg_dist),
             "action": "직진",
-            "message": message
+            "message": f"{round(seg_dist)}m 직진하세요",
         })
+    return linears
 
-    all_instructions = linear_instructions + turn_instructions
-    all_instructions.sort(key=lambda x: x["index"])
+def find_route(G, from_lat, from_lon, to_lat, to_lon):
+    
+    from_node, to_node = nearest_nodes(G, from_lat, from_lon, to_lat, to_lon)
+    route = route_nodes(G, from_node, to_node)
+
+    return route
+
+def build_response_from_route(G , route):
+    # ② 좌표·거리 계산
+    coords = [(G.nodes[n]["y"], G.nodes[n]["x"]) for n in route]
+    cum_dist = _cumulative_distances(G, route)
+    total_len = cum_dist[-1]
+    est_time = round((total_len / 1000) / 15 * 60, 1)  # 15km/h 가정
+
+    # ③ 구간·지시문 생성
+    segments = _build_route_segments(G, route)
+    turn_instr, turn_idx = _turn_instructions(G, route, coords, cum_dist)
+
+    bounds = [0] + turn_idx + [len(coords) - 1]
+    linear_instr = _linear_instructions(G, route, coords, bounds)
+
+    instructions = sorted(linear_instr + turn_instr, key=lambda x: x["index"])
 
     return {
-        "route": route_segments,
-        "distance_m": round(total_length, 1),
-        "estimated_time_min": round(estimated_time_min, 1),
-        "instructions": all_instructions
+        "route": segments,
+        "distance_m": round(total_len, 1),
+        "estimated_time_min": est_time,
+        "instructions": instructions,
     }
