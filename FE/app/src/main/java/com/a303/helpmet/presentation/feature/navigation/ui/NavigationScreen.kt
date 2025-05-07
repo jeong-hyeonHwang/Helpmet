@@ -13,6 +13,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
+import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
+import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
+import com.a303.helpmet.presentation.feature.navigation.ui.MapScreen
 
 @Composable
 fun NavigationScreen(
@@ -20,21 +23,15 @@ fun NavigationScreen(
     viewModel: NavigationViewModel = koinViewModel()
 ) {
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
-
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val streamingViewHeight = screenWidth * 3 / 4
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(streamingViewHeight)
-                    .background(Color.Black)
-            )
+            StreamingView()
         }
 
-        // 카메라 뷰 토글
+        // 카메라 뷰 토글 버튼
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -51,7 +48,7 @@ fun NavigationScreen(
             )
         }
 
-        // 지도 영역에 MapScreen 삽입
+        // 지도
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -63,13 +60,10 @@ fun NavigationScreen(
         }
 
         // 안내 멘트
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(Color.White)
-        ) {
-            // 필요 안내 UI
-        }
+        StreamingNoticeView(onFinish)
+
     }
 }
+
+
+
