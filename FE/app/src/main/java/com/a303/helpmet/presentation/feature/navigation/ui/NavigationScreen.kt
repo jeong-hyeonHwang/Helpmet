@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.feature.navigation.ui
+package com.a303.helpmet.presentation.feature.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
-
+import com.a303.helpmet.presentation.feature.navigation.ui.MapScreen
 
 @Composable
 fun NavigationScreen(
@@ -22,21 +22,15 @@ fun NavigationScreen(
     viewModel: NavigationViewModel = koinViewModel()
 ) {
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
-
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val streamingViewHeight = screenWidth * 3 / 4
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(streamingViewHeight)
-                    .background(Color.Black)
-            )
+            //StreamingView()
         }
 
-        // 카메라 뷰 토클
+        // 카메라 뷰 토글 버튼
         Box(
             modifier = Modifier
                 .fillMaxWidth()
