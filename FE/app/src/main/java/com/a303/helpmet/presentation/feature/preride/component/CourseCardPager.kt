@@ -38,7 +38,7 @@ fun CourseCardPager(
                     ).absoluteValue
 
             val scale = lerp(start = 0.9f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
-            val alpha = lerp(start = 0.85f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+            val alpha = lerp(start = 0.88f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
             CourseCardView(
                 modifier = Modifier.width(cardWidth)
                     .graphicsLayer {
