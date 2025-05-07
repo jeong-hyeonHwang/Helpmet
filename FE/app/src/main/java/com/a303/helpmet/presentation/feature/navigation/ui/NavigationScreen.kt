@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.feature.navigation
+package com.a303.helpmet.presentation.feature.navigation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,7 +11,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import com.kakao.vectormap.LatLng
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -58,7 +58,6 @@ fun NavigationScreen(
                 .weight(1f)
         ) {
             MapScreen(
-                defaultPosition = LatLng.from(37.394660, 127.111182),
                 defaultZoom = 15
             )
         }

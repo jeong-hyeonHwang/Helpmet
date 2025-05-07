@@ -8,7 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
-import com.a303.helpmet.presentation.feature.navigation.NavigationScreen
+import com.a303.helpmet.presentation.feature.navigation.ui.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.kakao.sdk.common.util.Utility.getKeyHash
