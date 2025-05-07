@@ -45,6 +45,7 @@
 
     <!-- 코스 상세 -->
     <string name="course_number">주행 코스 %1$d</string>
+    <string name="course_duration">%1$d분</string>
     <string name="course_distance">%1$.1fkm</string>
     <string name="start_station">시작 대여소: %1$s</string>
     <string name="end_station">도착 대여소: %1$s</string>
