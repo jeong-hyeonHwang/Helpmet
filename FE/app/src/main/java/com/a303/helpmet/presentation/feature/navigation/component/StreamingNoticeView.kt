@@ -25,7 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.StreamingNoticeState
-import com.a303.helpmet.presentation.feature.navigation.NavigationViewModel
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
 import com.a303.helpmet.util.postPosition.appendSubjectPostposition
