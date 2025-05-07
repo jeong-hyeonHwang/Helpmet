@@ -2,7 +2,7 @@ package com.a303.helpmet.presentation.feature.helmetcheck
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.a303.helpmet.domain.model.HelmetConnectionState
+import com.a303.helpmet.presentation.model.HelmetConnectionState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
