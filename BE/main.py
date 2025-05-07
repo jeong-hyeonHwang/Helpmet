@@ -1,29 +1,35 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from core.graph import load_graph
-from api import route
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(debug=True)
+from core.graph import load_graphs           # ← 기존 로직 재사용
+from api import route                       # ← 라우터 모듈
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # startup 
+    load_graphs(app)  # 필요하면 반환값 저장
+    print("✓ Graph loaded and attached to app.state.graph")
+    yield
+    # shutdown
+    print("Server shutting down…")
+
+
+app = FastAPI(
+    debug=True,
+    lifespan=lifespan, 
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 중에는 전체 허용
+    allow_origins=["*"],      # 개발 단계에서는 전체 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 app.include_router(route.router)
-
-@app.on_event("startup")
-async def startup_event():
-    graphml_path = "data/seoul_combined.graphml"  # 네트워크 파일 경로
-    load_graph(graphml_path)
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("Server shutting down...")
 
 @app.get("/ping")
 async def ping():
