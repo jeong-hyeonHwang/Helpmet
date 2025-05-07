@@ -1,11 +1,24 @@
 import osmnx as ox
+import networkx as nx
 import math
+
+def nearest_nodes(G, from_lat, from_lon, to_lat, to_lon):
+    return (
+        ox.distance.nearest_nodes(G, X=from_lon, Y=from_lat),
+        ox.distance.nearest_nodes(G, X=to_lon, Y=to_lat),
+    )
+
+def route_nodes(G, from_node, to_node):
+    return nx.shortest_path(G, from_node, to_node, weight="length")
+
+def edge_length(G, n1, n2):
+    return G.edges[n1, n2, 0].get("length", 0)
 
 def build_instruction_message(G, node_id, action, distance, lat, lon):
     if is_crosswalk_node(node_id, G):
         return "횡단보도를 건너세요"
 
-    pois = get_poi_nearby(lat, lon)
+    pois = get_nearest_poi(lat, lon)
     landmark = pois[0] if pois else None
 
     if landmark:
@@ -41,30 +54,31 @@ def calculate_angle(p1, p2, p3):
 
     return angle_deg, turn
 
-
-def get_poi_nearby(lat, lon, radius=30):
+def get_nearest_poi(lat, lon, radius=30):
     tags = {"building": True, "amenity": True, "shop": True}
     try:
         pois = ox.features_from_point((lat, lon), tags=tags, dist=radius)
-        if "name" in pois.columns:
-            names = pois["name"].dropna().unique().tolist()
-            return names
-    except Exception:
-        pass
-    return []
-
+        if "name" in pois.columns and not pois.empty:
+            pois = pois[pois["name"].notna()]
+            pois["centroid"] = pois.geometry.centroid
+            pois["distance"] = pois["centroid"].apply(
+                lambda p: ((lat - p.y)**2 + (lon - p.x)**2)**0.5
+            )
+            nearest_poi = pois.sort_values("distance").iloc[0]
+            return nearest_poi["name"]
+    except Exception as e:
+        print(f"[ERROR] POI 탐색 실패: {e}")
+    return None
 
 def is_crosswalk_node(node_id, G):
     node_data = G.nodes[node_id]
     return node_data.get("highway") == "crossing"
 
-
 def build_instruction_message(G, node_id, action, distance, lat, lon):
     if is_crosswalk_node(node_id, G):
         return "횡단보도를 건너세요"
 
-    pois = get_poi_nearby(lat, lon)
-    landmark = pois[0] if pois else None
+    landmark = get_nearest_poi(lat, lon)
 
     if landmark:
         return f"{landmark} 앞에서 {action}하세요"
