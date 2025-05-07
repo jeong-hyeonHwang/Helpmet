@@ -19,7 +19,7 @@ fun CourseInfoBubbleView(
     modifier: Modifier = Modifier
 ){
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val cardWidth = screenWidth * 0.85f
+    val cardWidth = screenWidth * 0.88f
 
     Card(
         modifier = modifier.width(cardWidth),
