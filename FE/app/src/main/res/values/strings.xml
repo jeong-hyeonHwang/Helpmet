@@ -9,6 +9,13 @@
     <string name="connect_helmet_prompt">헬멧을 먼저 연결해주세요.</string>
     <string name="connect_helmet_success">헬멧과 연결되었습니다!</string>
 
+    <!-- 헬멧 연결 과정 -->
+    <string name="dialog_confirm">확인</string>
+    <string name="dialog_cancel">취소</string>
+    <string name="dialog_connect_helmet_success">헬멧과 연결되었습니다!</string>
+    <string name="dialog_searching_helmet">헬멧을 찾는 중입니다...</string>
+    <string name="dialog_connecting_helmet">헬멧과 연결 중입니다...</string>
+
     <!-- 코스 추천 -->
     <string name="recommend_course_hangang">한강 주행 코스 추천</string>
     <string name="recommend_course_with_ddareungi">따릉이와 함께 달려볼까요?</string>
@@ -19,6 +26,7 @@
     <!-- 시작 버튼 -->
     <string name="start">시작하기</string>
     <string name="begin_connection">연결 시작</string>
+    <string name="end_connection">연결 종료</string>
 
     <!-- 헬멧 선택 -->
     <string name="helmet_found">%1$s 헬멧을 찾았습니다.</string>
@@ -47,8 +55,9 @@
     </string>
 
     <!-- 위험 감지 -->
-    <string name="rear_warning">후방에 위험 감지</string>
+    <string name="rear_caution">후방에 %1$s 있습니다.</string>
+    <string name="rear_danger">후방의 %1$s 조심하세요!</string>
 
     <!-- 주변 탐색 -->
-    <string name="scanning_surroundings">%1$s을 탐색하고 있습니다.</string>
+    <string name="scanning_surroundings">%1$s 탐색하고 있습니다.</string>
 </resources>
