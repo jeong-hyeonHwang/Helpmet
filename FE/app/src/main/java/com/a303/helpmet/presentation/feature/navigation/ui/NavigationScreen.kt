@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.feature.navigation
+package com.a303.helpmet.presentation.feature.navigation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
+import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
 import com.a303.helpmet.presentation.feature.navigation.ui.MapScreen
 
 @Composable
@@ -27,7 +28,7 @@ fun NavigationScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
-            //StreamingView()
+            StreamingView()
         }
 
         // 카메라 뷰 토글 버튼
