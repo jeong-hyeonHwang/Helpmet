@@ -1,31 +1,28 @@
 package com.a303.helpmet
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.a303.helpmet.presentation.feature.NavRoutes
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
-import com.a303.helpmet.presentation.feature.navigation.NavigationScreen
+import com.a303.helpmet.presentation.feature.navigation.ui.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.kakao.sdk.common.util.Utility.getKeyHash
 
 // MainActivity.kt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val keyHash = getKeyHash(this)
+        Log.d("HASH", keyHash)
+
         setContent {
             HelpmetTheme {
                 val navController = rememberNavController()

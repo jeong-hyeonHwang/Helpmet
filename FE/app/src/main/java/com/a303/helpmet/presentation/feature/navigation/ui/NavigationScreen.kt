@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.feature.navigation
+package com.a303.helpmet.presentation.feature.navigation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,9 +11,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
-import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
-
 
 @Composable
 fun NavigationScreen(
@@ -22,26 +21,26 @@ fun NavigationScreen(
 ) {
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
 
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val streamingViewHeight = screenWidth * 3 / 4
 
-
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-        val streamingViewHeight = screenWidth * 3 / 4
-
+    Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
             Box(
-                modifier = Modifier.fillMaxWidth().height(streamingViewHeight).background(Color.Black)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(streamingViewHeight)
+                    .background(Color.Black)
             )
         }
 
-        // 카메라 뷰 토클
+        // 카메라 뷰 토글
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
-                .clickable { viewModel.toggleStreaming() }, contentAlignment = Alignment.Center
+                .clickable { viewModel.toggleStreaming() },
+            contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
@@ -52,19 +51,25 @@ fun NavigationScreen(
             )
         }
 
-        // 지도
+        // 지도 영역에 MapScreen 삽입
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .background(Color.Yellow)
-        )
+        ) {
+            MapScreen(
+                defaultZoom = 15
+            )
+        }
 
         // 안내 멘트
-        StreamingNoticeView()
-
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(Color.White)
+        ) {
+            // 필요 안내 UI
+        }
     }
 }
-
-
-

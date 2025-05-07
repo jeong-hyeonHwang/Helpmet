@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.feature.navigation
+package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
