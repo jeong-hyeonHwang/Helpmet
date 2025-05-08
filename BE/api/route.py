@@ -4,9 +4,11 @@ from services.route_service import find_route, build_response_from_route
 from services.bike_route_service import find_bike_route
 from services.route_util import nearest_nodes, route_nodes
 
-router = APIRouter()
+router = APIRouter(
+    prefix= "/route"
+)
 
-@router.get("/route/walk")
+@router.get("/walk")
 async def get_route(
     request: Request,
     from_lat: float = Query(..., description="출발지 위도"),
@@ -22,7 +24,7 @@ async def get_route(
         traceback.print_exc()  # ✅ 콘솔에 전체 에러 스택 찍힘
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.get("/route/bike")
+@router.get("/bike")
 async def get_bike_from_nearest(
     lat: float = Query(...),
     lon: float = Query(...),
