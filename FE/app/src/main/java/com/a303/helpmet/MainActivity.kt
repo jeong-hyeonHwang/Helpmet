@@ -11,6 +11,7 @@ import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
 import com.a303.helpmet.presentation.feature.navigation.ui.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
+import com.a303.helpmet.presentation.feature.voiceguide.VoiceGuideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.kakao.sdk.common.util.Utility.getKeyHash
 
@@ -37,11 +38,15 @@ class MainActivity : ComponentActivity() {
                             onHelmetChecked = {
                                 // 주행 코스 추천 화면 이동 전 주행 시간 설정 화면으로
                                 navController.navigate("ride_time_set")
+                            },
+                            onStartVoiceGuide = {
+                                // 음성 가이드 화면으로 이동
+                                navController.navigate("voice_guide")
                             }
                         )
                     }
 
-                    // 2) 코스 추천 전 주행 시간 설정 화면
+                    // 2-1) 코스 추천 전 주행 시간 설정 화면
                     composable("ride_time_set"){
                         RideTimeSetScreen(
                             onRideTimeSet = {
@@ -49,6 +54,11 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("pre_ride")
                             }
                         )
+                    }
+
+                    // 2-2) 음성 정보 가이드 화면
+                    composable("voice_guide"){
+                        VoiceGuideScreen()
                     }
 
                     // 3) 코스 안내 시작 전 화면
@@ -65,8 +75,8 @@ class MainActivity : ComponentActivity() {
                     composable("navigation") {
                         NavigationScreen(
                             onFinish = {
-                                // 안내 종료 시 다시 2번(pre_ride) 화면으로
-                                navController.popBackStack("pre_ride", inclusive = false)
+                                // 안내 종료 시 다시 1번(helmet_check) 화면으로
+                                navController.popBackStack("helmet_check", inclusive = false)
                             }
                         )
                     }

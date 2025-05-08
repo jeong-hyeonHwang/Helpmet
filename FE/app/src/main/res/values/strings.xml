@@ -43,6 +43,11 @@
     <string name="start_course_recommend">주행 코스 추천 시작하기</string>
     <string name="start_navigation">안내 시작하기</string>
 
+    <!-- 노이즈 캔슬링 알림 -->
+    <string name="noise_canceling_title">이어폰이 연결된 상태입니다.</string>
+    <string name="noise_canceling_content">노이즈 캔슬링이 켜져 있다면,\n도로 위의 위험 신호를 놓칠 수 있어요!\n\n안전을 위해 노이즈 캔슬링을 꺼주세요.</string>
+    <string name="noise_canceling_check">확인했어요</string>
+
     <!-- 코스 상세 -->
     <string name="course_number">주행 코스 %1$d</string>
     <string name="course_duration">%1$d분</string>

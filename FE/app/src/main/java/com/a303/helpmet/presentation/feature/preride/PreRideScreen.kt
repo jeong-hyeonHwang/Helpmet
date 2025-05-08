@@ -1,5 +1,8 @@
 package com.a303.helpmet.presentation.feature.preride
 
+import android.content.Context
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -41,24 +44,70 @@ fun PreRideScreen(
         )
     ).map { it.toCourseInfo(LocalContext.current) }
 
+    val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedCourseId by remember { mutableStateOf<Int?>(null) }
+
+    // 이어폰 연결 확인 함수
+    fun isHeadsetConnected(): Boolean {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val devices: Array<AudioDeviceInfo> =
+            audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
+
+        return devices.any { device ->
+            when (device.type) {
+                AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+                AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+                AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> true
+
+                else -> false
+            }
+        }
+    }
+
+    val onStartRideClicked: (Int) -> Unit = { courseId ->
+        val isConnected = isHeadsetConnected()
+        if (isConnected) {
+            selectedCourseId = courseId
+            showDialog = true
+        } else {
+            onStartRide(courseId)
+        }
+    }
+    if (showDialog && selectedCourseId != null) {
+        NoiseCancelingWarningDialog(
+            onDismiss = {showDialog = false},
+            onConfirm = {
+                selectedCourseId?.let {
+                    showDialog = false
+                    onStartRide(it)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
 
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier.fillMaxSize()) {
             PreRideMapView()
-            CourseInfoBubbleView(modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top=32.dp))
+            CourseInfoBubbleView(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 32.dp)
+            )
 
             CourseCardPager(
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth(),
                 courses = dummyCourses,
-                onStartRide = onStartRide
+                onStartRide = onStartRideClicked
             )
         }
     }
@@ -66,8 +115,8 @@ fun PreRideScreen(
 
 @Preview
 @Composable
-fun PreRidePreview(){
+fun PreRidePreview() {
     PreRideScreen(
-        onStartRide={}
+        onStartRide = {}
     )
 }
