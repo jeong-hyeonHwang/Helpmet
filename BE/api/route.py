@@ -23,7 +23,7 @@ async def get_route(
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.get("/route/bike")
-def get_bike_from_nearest(
+async def get_bike_from_nearest(
     lat: float = Query(...),
     lon: float = Query(...),
     max_minutes: int = Query(20, ge=10, le=60),
@@ -46,7 +46,7 @@ def get_bike_from_nearest(
 
         return [{
             "distance_m": round(walk_result1["distance_m"] + bike_result["distance_m"], 1),
-            "estimated_time_min": round(walk_result1["estimated_time_min"] + bike_result["estimated_time_min"], 1),
+            "estimated_time_sec": round(walk_result1["estimated_time_sec"] + bike_result["estimated_time_sec"], 1),
             "route": walk_result1["route"] + bike_result["route"],
             "instructions": walk_result1["instructions"] + [
                 {**instr, "index": instr["index"] + offset}
