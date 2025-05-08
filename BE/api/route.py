@@ -11,10 +11,10 @@ router = APIRouter(
 @router.get("/walk")
 async def get_route(
     request: Request,
-    from_lat: float = Query(..., description="출발지 위도"),
-    from_lon: float = Query(..., description="출발지 경도"),
-    to_lat: float = Query(..., description="도착지 위도"),
-    to_lon: float = Query(..., description="도착지 경도")
+    from_lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
+    from_lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
+    to_lat: float = Query(..., ge=-90, le=90, description="도착지 위도"),
+    to_lon: float = Query(..., ge=-180, le=180, description="도착지 경도")
 ):
     try:
         route = find_route(request.app.state.G_walk, from_lat, from_lon, to_lat, to_lon)
@@ -26,8 +26,8 @@ async def get_route(
     
 @router.get("/bike")
 async def get_bike_from_nearest(
-    lat: float = Query(...),
-    lon: float = Query(...),
+    lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
+    lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
     max_minutes: int = Query(20, ge=10, le=60),
     request: Request = None
 ):
