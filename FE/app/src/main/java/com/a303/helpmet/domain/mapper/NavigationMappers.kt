@@ -1,9 +1,9 @@
 package com.a303.helpmet.domain.mapper
 
-import com.a303.helpmet.data.dto.InstructionDto
-import com.a303.helpmet.data.dto.LatLngDto
-import com.a303.helpmet.data.dto.NavigationResponseDto
-import com.a303.helpmet.data.dto.RouteSegmentDto
+import com.a303.helpmet.data.dto.response.InstructionDto
+import com.a303.helpmet.data.dto.response.LatLngDto
+import com.a303.helpmet.data.dto.response.NavigationResponseDto
+import com.a303.helpmet.data.dto.response.RouteSegmentDto
 import com.a303.helpmet.domain.model.Action
 import com.a303.helpmet.domain.model.Instruction
 import com.a303.helpmet.domain.model.LatLng
@@ -15,14 +15,14 @@ fun LatLngDto.toDomain() = LatLng(lat, lng)
 fun RouteSegmentDto.toDomain() = RouteSegment(
     from    = from.toDomain(),
     to      = to.toDomain(),
-    isCycle = isCycle
+    isCycle = isCycle,
+    distance = distance
 )
 
 fun InstructionDto.toDomain() = Instruction(
     index           = index,
     location        = location.toDomain(),
-    distanceM       = distanceM,
-    distanceToHereM = distanceToHereM,
+    distance       = distance,
     action          = when(action) {
         "직진" -> Action.STRAIGHT
         "좌회전" -> Action.LEFT
@@ -34,7 +34,7 @@ fun InstructionDto.toDomain() = Instruction(
 )
 
 fun NavigationResponseDto.toDomain() = NavigationRoute(
-    distanceM        = distanceM,
+    distance        = distance,
     estimatedTimeSec = estimatedTimeSec,
     segments         = route.map { it.toDomain() },
     instructions     = instructions.map { it.toDomain() }

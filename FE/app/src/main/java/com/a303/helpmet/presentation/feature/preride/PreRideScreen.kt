@@ -1,5 +1,6 @@
 package com.a303.helpmet.presentation.feature.preride
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -7,13 +8,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.data.dto.response.CourseResponse
+import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.domain.mapper.toCourseInfo
 import com.a303.helpmet.presentation.feature.preride.component.*
 
 @Composable
 fun PreRideScreen(
+//    preRideViewModel: PreRideViewModel = koinViewModel(),
+    preRideViewModel: PreRideViewModel = remember {
+        PreRideViewModel(FakeNavigationService())
+    },
     onStartRide: (Int) -> Unit
 ) {
+    // 1) ViewModel의 Flows 를 collectAsState
+    val routeOptions   by preRideViewModel.routeOptions.collectAsState()
+    val selectedIndex  by preRideViewModel.selectedCourseIndex.collectAsState()
+
+    val selectedOption = routeOptions.getOrNull(selectedIndex)
+
     val dummyCourses = listOf(
         CourseResponse(
             courseNumber = 1,
@@ -41,28 +53,52 @@ fun PreRideScreen(
         )
     ).map { it.toCourseInfo(LocalContext.current) }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
+    val context = LocalContext.current
 
-        Box(modifier = Modifier.fillMaxSize()){
-            PreRideMapView()
-            CourseInfoBubbleView(modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top=32.dp))
+    LaunchedEffect(Unit) {
+        preRideViewModel.loadRoutes(context)
+    }
 
-            CourseCardPager(
-                modifier = Modifier.padding(bottom = 16.dp)
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth(),
-                courses = dummyCourses,
-                onStartRide = onStartRide
+    LaunchedEffect(routeOptions) {
+        Log.d("PreRideScreen", "routeOptions size = ${routeOptions.size}")
+        Log.d("PreRideScreen", "selectedOption size = ${selectedOption.toString()}")
+
+
+    }
+
+    // 1) 전체를 채우는 Box
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 2) 맵을 배경으로 깔기
+        if (routeOptions.isNotEmpty()) {
+            val option = routeOptions[selectedIndex]
+            RoutePreviewMapView(
+                routeOption = option,
             )
         }
+
+        // 3) 상단에 CourseInfoBubbleView 오버레이
+        CourseInfoBubbleView(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 32.dp)
+        )
+
+        // 4) 하단에 CourseCardPager 오버레이
+        CourseCardPager(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            courses = dummyCourses,
+            onSelectCourse = { idx ->
+                Log.d("PreRideScreen", "PreRideScreen: ${idx}")
+                preRideViewModel.onCourseSelected(idx)
+            },
+            onStartRide = onStartRide
+        )
     }
 }
+
 
 @Preview
 @Composable

@@ -1,4 +1,4 @@
-package com.a303.helpmet.data.dto
+package com.a303.helpmet.data.dto.response
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,6 +12,9 @@ data class RouteSegmentDto(
     @SerialName("to")
     val to: LatLngDto,
 
-    @SerialName("is_cycle")
-    val isCycle: Boolean
+    @SerialName("is_cycleway")
+    val isCycle: Boolean,
+
+    @SerialName("distance_m")
+    val distance: Double
 )

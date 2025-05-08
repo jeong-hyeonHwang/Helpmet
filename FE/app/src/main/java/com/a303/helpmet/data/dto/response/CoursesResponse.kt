@@ -12,4 +12,3 @@ data class CourseResponse(
     val endStation: String,
     val navId: Int
 )
-
