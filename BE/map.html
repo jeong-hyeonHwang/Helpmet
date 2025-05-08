@@ -130,8 +130,8 @@
         async function drawRoute(fromLat, fromLon, toLat, toLon) {
           try {
             const res = await fetch(
-              // `http://127.0.0.1:8000/route/walk?from_lat=${fromLat}&from_lon=${fromLon}&to_lat=${toLat}&to_lon=${toLon}`
-            `http://127.0.0.1:8000/route/bike?lat=${fromLat}&lon=${fromLon}&to_lat=${toLat}&to_lon=${toLon}&max_minutes=30`
+              `http://127.0.0.1:8000/route/walk?from_lat=${fromLat}&from_lon=${fromLon}&to_lat=${toLat}&to_lon=${toLon}`
+            // `http://127.0.0.1:8000/route/bike?lat=${fromLat}&lon=${fromLon}&to_lat=${toLat}&to_lon=${toLon}&max_minutes=30`
             );
             const data = await res.json();
             console.log(data);

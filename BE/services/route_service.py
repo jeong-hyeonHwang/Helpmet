@@ -22,7 +22,7 @@ def _build_route_segments(G, route):
             "from": {"lat": G.nodes[n1]["y"], "lon": G.nodes[n1]["x"]},
             "to": {"lat": G.nodes[n2]["y"], "lon": G.nodes[n2]["x"]},
             "is_cycleway" : (highway == "cycleway") or (cycleway in {"track", "lane"}),
-            "length_m": edge.get("length", 0),
+            "distance_m": edge.get("length", 0),
         })
     return segments
 
@@ -81,7 +81,8 @@ def build_response_from_route(G , route):
     coords = [(G.nodes[n]["y"], G.nodes[n]["x"]) for n in route]
     cum_dist = _cumulative_distances(G, route)
     total_len = cum_dist[-1]
-    est_time = round((total_len / 1000) / 15 * 60, 1)  # 15km/h 가정
+    est_time = int((total_len / 1000) / 15 * 3600)
+
 
     # ③ 구간·지시문 생성
     segments = _build_route_segments(G, route)
@@ -93,8 +94,8 @@ def build_response_from_route(G , route):
     instructions = sorted(linear_instr + turn_instr, key=lambda x: x["index"])
 
     return {
-        "route": segments,
         "distance_m": round(total_len, 1),
-        "estimated_time_min": est_time,
+        "estimated_time_sec": est_time,
+        "route": segments,
         "instructions": instructions,
     }
