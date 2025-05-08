@@ -44,7 +44,7 @@ def _turn_instructions(G, route, coords, cum_dist):
         turns.append({
             "index": i,
             "location": {"lat": lat, "lon": lon},
-            "distance_to_here_m": distance,
+            "distance_m": distance,
             "action": action,
             "message": build_instruction_message(
                 G, route[i], action, distance, lat, lon
