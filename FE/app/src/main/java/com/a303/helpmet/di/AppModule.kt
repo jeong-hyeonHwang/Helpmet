@@ -4,5 +4,6 @@ val appModule = listOf(
     helmetCheckModule,
     prerideModule,
     rideTimeSetModule,
-    navigationModule
+    navigationModule,
+    voiceGuideModule
 )
