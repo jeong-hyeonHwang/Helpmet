@@ -92,8 +92,8 @@ def build_response_from_route(G , route) -> RouteResponseDto:
 
     instructions = sorted(linear_instr + turn_instr, key=lambda x: x.index)
 
-    start_addr = get_nearest_poi(G.nodes[route[0]]["y"], G.nodes[route[0]]["x"])
-    end_addr = get_nearest_poi(G.nodes[route[0]]["y"], G.nodes[route[-1]]["x"])
+    start_addr : str = get_nearest_poi(G.nodes[route[0]]["y"], G.nodes[route[0]]["x"])
+    end_addr :str = get_nearest_poi(G.nodes[route[0]]["y"], G.nodes[route[-1]]["x"])
 
     return RouteResponseDto(
         start_addr=start_addr,

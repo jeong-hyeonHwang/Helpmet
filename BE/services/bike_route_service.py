@@ -43,8 +43,10 @@ async def find_full_route(db, request, lat : float, lon : float, max_minutes : i
     walk_route2 = route_nodes(G_walk, w3, w4)
     walk_result2 = build_response_from_route(G_walk, walk_route2)
         
-    return build_combined_response(walk_result1=walk_result1, bike_result=bike_result, walk_result2=walk_result2)
+    result = build_combined_response(walk_result1=walk_result1, bike_result=bike_result, walk_result2=walk_result2)
+    result.end_addr = bike_station.addr1 if bike_station.addr2 is None or len(bike_station.addr2) == 0 else bike_station.addr2 + ' 대여소'
 
+    return result
 
 def build_combined_response(walk_result1 : RouteResponseDto, bike_result : RouteResponseDto, walk_result2 : RouteResponseDto) -> RouteResponseDto:
     total_distance = round(
