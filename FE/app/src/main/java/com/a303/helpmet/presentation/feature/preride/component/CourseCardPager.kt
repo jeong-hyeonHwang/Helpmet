@@ -7,17 +7,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.unit.dp
-import com.a303.helpmet.presentation.model.CourseInfo
+import com.a303.helpmet.presentation.model.RouteInfo
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.absoluteValue
 
 @Composable
 fun CourseCardPager(
     modifier: Modifier,
-    courses: List<CourseInfo>,
+    courses: List<RouteInfo>,
     onSelectCourse: (Int) -> Unit,
     onStartRide: (Int) -> Unit
 ) {

@@ -9,13 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import com.a303.helpmet.R
-import com.a303.helpmet.presentation.model.CourseInfo
+import com.a303.helpmet.presentation.model.RouteInfo
 import com.a303.helpmet.ui.theme.HelpmetTheme
 
 @Composable
 fun CourseCardView(
     modifier: Modifier = Modifier,
-    course: CourseInfo,
+    course: RouteInfo,
     onSelectCourse: (Int) -> Unit,
     onStartRide: (Int) -> Unit
 ) {
@@ -33,38 +33,33 @@ fun CourseCardView(
         ) {
             // 코스 이름
             Text(
-                text = course.courseName,
+                text = stringResource(R.string.course_number, course.routeId + 1),
                 style = HelpmetTheme.typography.subtitle,
                 color = HelpmetTheme.colors.black1
             )
-
-            // 시간 · 거리
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = course.duration,
-                    style = HelpmetTheme.typography.bodyMedium,
-                    color = HelpmetTheme.colors.black1
-                )
-                Text(
-                    text = course.distanceKm,
-                    style = HelpmetTheme.typography.bodyMedium,
-                    color = HelpmetTheme.colors.black1
-                )
-            }
-
-            // 출발 / 도착 스테이션
+            // 출발 / 도착 지점
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = course.startStation,
-                    style = HelpmetTheme.typography.bodySmall,
+                    text = stringResource(R.string.course_duration, course.duration),
+                    style = HelpmetTheme.typography.title,
                     color = HelpmetTheme.colors.black1
                 )
                 Text(
-                    text = course.endStation,
+                    text = stringResource(R.string.course_distance, course.distanceKm),
                     style = HelpmetTheme.typography.bodySmall,
+                    color = HelpmetTheme.colors.black1
+                )
+
+                Spacer(Modifier.padding(4.dp))
+
+                Text(
+                    text = stringResource(R.string.start_location, course.startLocationName),
+                    style = HelpmetTheme.typography.bodyMedium,
+                    color = HelpmetTheme.colors.black1
+                )
+                Text(
+                    text = stringResource(R.string.end_location, course.endLocationName),
+                    style = HelpmetTheme.typography.bodyMedium,
                     color = HelpmetTheme.colors.black1
                 )
             }
@@ -79,8 +74,8 @@ fun CourseCardView(
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = HelpmetTheme.colors.black1),
                 onClick = {
-                    onSelectCourse(course.navId)
-                    onStartRide(course.navId)
+                    onSelectCourse(course.routeId)
+                    onStartRide(course.routeId)
                 }
             ) {
                 Text(

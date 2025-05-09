@@ -3,27 +3,21 @@ package com.a303.helpmet.presentation.feature.preride
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.a303.helpmet.data.dto.response.CourseResponse
 import com.a303.helpmet.data.service.FakeNavigationService
-import com.a303.helpmet.domain.mapper.toCourseInfo
 import com.a303.helpmet.presentation.feature.preride.component.CourseCardPager
 import com.a303.helpmet.presentation.feature.preride.component.CourseInfoBubbleView
 import com.a303.helpmet.presentation.feature.preride.component.LocationCircleButton
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun PreRideScreen(
@@ -35,16 +29,10 @@ fun PreRideScreen(
     // 1) ViewModel 상태 구독
     val routeOptions  by preRideViewModel.routeOptions.collectAsState()
     val selectedIndex by preRideViewModel.selectedCourseIndex.collectAsState()
+    val routeInfoList by preRideViewModel.routeInfoList.collectAsState()
 
     // 2) 내 위치 자동 추적 플래그
     var followUser by remember { mutableStateOf(false) }
-
-    // 3) 더미 코스 생성
-    val dummyCourses = listOf(
-        CourseResponse(1, 15, 8.5f, "연제구 꽃잎길 32", "성동구 와우로길 32길", 1),
-        CourseResponse(2, 30, 10.5f, "연제구 꽃잎길 32", "성동구 와우로길 32길", 2),
-        CourseResponse(3, 10, 6f, "연제구 꽃잎길 32", "성동구 와우로길 32길", 3)
-    ).map { it.toCourseInfo(LocalContext.current) }
 
     // 4) 최초 한 번만 API 호출
     val context = LocalContext.current
@@ -70,10 +58,6 @@ fun PreRideScreen(
                 .padding(top = 32.dp)
         )
 
-
-        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-        val cardWidth = screenWidth * 0.85f
-        val sidePadding = (screenWidth - cardWidth) / 2
         // 7) 하단 카드 페이저
         Column(
             modifier = Modifier
@@ -95,7 +79,7 @@ fun PreRideScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.CenterHorizontally),
-                courses        = dummyCourses,
+                courses        = routeInfoList,
                 onSelectCourse = { idx -> preRideViewModel.onCourseSelected(idx) },
                 onStartRide    = onStartRide
             )

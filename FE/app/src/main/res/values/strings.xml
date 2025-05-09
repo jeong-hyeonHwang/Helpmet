@@ -47,12 +47,12 @@
     <string name="course_number">주행 코스 %1$d</string>
     <string name="course_duration">%1$d분</string>
     <string name="course_distance">%1$.1fkm</string>
-    <string name="start_station">시작 대여소: %1$s</string>
-    <string name="end_station">도착 대여소: %1$s</string>
+    <string name="start_location">시작 지점: %1$s</string>
+    <string name="end_location">도착 지점: %1$s</string>
 
     <!-- 위치 기반 추천 설명 -->
     <string name="nearby_course_info">
-        현재 사용자의 위치를 기반으로\n가장 가까운 근처 한강의\n자전거 드라이브 코스를 추천해드려요!
+        현재 사용자의 위치를 기반으로 가장 가까운\n자전거 드라이브 코스를 추천해드려요!
     </string>
 
     <!-- 위험 감지 -->

@@ -2,5 +2,5 @@ package com.a303.helpmet.domain.model
 
 data class LatLng(
     val lat: Double,
-    val lon: Double
+    val lng: Double
 )
