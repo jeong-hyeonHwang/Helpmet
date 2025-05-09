@@ -3,9 +3,9 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.database import BikeStation
+from core.models import BikeStation
 
-async def get_nearby_bike_stations(
+async def fetch_nearby_bike_stations(
     db: AsyncSession,
     lat: float,
     lon: float,
@@ -20,7 +20,7 @@ async def get_nearby_bike_stations(
     result = await db.execute(query)
     return result.scalars().all()
 
-async def get_closest_bike_station(
+async def fetch_closest_bike_station(
     db: AsyncSession,
     lat: float,
     lon: float

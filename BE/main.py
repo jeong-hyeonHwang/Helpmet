@@ -1,17 +1,22 @@
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from core.graph import load_graphs           # ← 기존 로직 재사용
-from api import route                       # ← 라우터 모듈
+from core.database import engine, Base
+from core.graph import load_graphs
+from api import route
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup 
-    load_graphs(app)  # 필요하면 반환값 저장
+    # startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        print("✓ DB Tables created (if not exists)")
+
+    load_graphs(app)
     print("✓ Graph loaded and attached to app.state.graph")
+    
     yield
+    
     # shutdown
     print("Server shutting down…")
 
