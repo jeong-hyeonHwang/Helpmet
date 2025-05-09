@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine, Base
 from core.graph import load_graphs
 from api import route
+from core.exception_handlers import register_exception_handlers
+from services.logger import setup_logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,7 +38,6 @@ app.add_middleware(
 
 app.include_router(route.router)
 
-@app.get("/ping")
-async def ping():
-    return {"message": "pong"}
+register_exception_handlers(app)
 
+setup_logger()
