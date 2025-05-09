@@ -1,5 +1,9 @@
 package com.a303.helpmet.presentation.feature.navigation.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -17,20 +21,56 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
+import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 
 @Composable
 fun NavigationScreen(
     onFinish: () -> Unit,
     viewModel: NavigationViewModel = koinViewModel()
 ) {
+    val context = LocalContext.current
+    val voiceViewModel: VoiceInteractViewModel = koinViewModel()
+
+    // 권한 상태 관리
+    var hasRecordPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // 권한 요청 런처
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasRecordPermission = isGranted
+        if (isGranted) {
+            voiceViewModel.startListening()
+        } else {
+            voiceViewModel.notifyPermissionMissing()
+        }
+    }
+
+    // 최초 실행 시 권한 요청
+    LaunchedEffect(Unit) {
+        if (!hasRecordPermission) {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        } else {
+            voiceViewModel.startListening()
+        }
+    }
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
