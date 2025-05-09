@@ -41,8 +41,6 @@ class PreRideViewModel (
             } else {
                 _routeOptions.value = emptyList()
             }
-
-            Log.d("????????", "loadRoutes: " + routeOptions.value.size)
         }
     }
 }

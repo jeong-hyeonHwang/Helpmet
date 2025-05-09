@@ -3,7 +3,6 @@ package com.a303.helpmet.presentation.feature.preride
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +22,7 @@ import com.a303.helpmet.presentation.feature.navigation.usecase.UpdateMapShapesU
 import com.kakao.vectormap.KakaoMap
 import com.kakao.vectormap.KakaoMapReadyCallback
 import com.kakao.vectormap.LatLng
+import com.kakao.vectormap.LatLngBounds
 import com.kakao.vectormap.MapLifeCycleCallback
 import com.kakao.vectormap.MapView
 import com.kakao.vectormap.camera.CameraAnimation
@@ -36,18 +36,20 @@ import com.kakao.vectormap.shape.ShapeLayer
 @Composable
 fun RoutePreviewMapView(
     routeOption: RouteLineOptions?,
-    routePreviewViewModel: RoutePreviewViewModel = viewModel(),
+    followUser: Boolean,
+    onFollowHandled: () -> Unit,
     defaultZoom: Int = 17,
-    updateMapShapes: UpdateMapShapesUseCase = UpdateMapShapesUseCase()
+    updateMapShapes: UpdateMapShapesUseCase = UpdateMapShapesUseCase(),
+    routePreviewViewModel: RoutePreviewViewModel = viewModel()
 ) {
-    val context = LocalContext.current
+    val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // 1) 위치·헤딩 Flows 구독
+    // 1) 현재 위치·헤딩 관찰
     val position by routePreviewViewModel.position.collectAsState()
     val heading  by routePreviewViewModel.heading.collectAsState()
 
-    // 2) 권한 요청
+    // 2) 퍼미션 체크 및 요청
     var hasLocPerm by remember {
         mutableStateOf(
             ActivityCompat.checkSelfPermission(
@@ -58,25 +60,19 @@ fun RoutePreviewMapView(
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasLocPerm = granted }
-
     LaunchedEffect(Unit) {
-        Log.d("PreRideScreen", "RoutePreviewMapView: ${routeOption.toString()}")
         if (!hasLocPerm) permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
-    // 3) 권한 생기면 트래킹 시작
     LaunchedEffect(hasLocPerm) {
-        if (hasLocPerm) {
-            routePreviewViewModel.startTracking(context) { _, _ -> /* no-op */ }
-        }
+        if (hasLocPerm) routePreviewViewModel.startTracking(context) { _, _ -> }
     }
 
-    // 4) MapView 참조용
-    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
-    var kakaoMap   by remember { mutableStateOf<KakaoMap?>(null) }
+    // 3) MapView·KakaoMap·레이어 참조
+    var mapViewRef     by remember { mutableStateOf<MapView?>(null) }
+    var kakaoMap       by remember { mutableStateOf<KakaoMap?>(null) }
     var routeLineLayer by remember { mutableStateOf<RouteLineLayer?>(null) }
-    var shapeLayer by remember { mutableStateOf<ShapeLayer?>(null) }
+    var shapeLayer     by remember { mutableStateOf<ShapeLayer?>(null) }
 
-    // 5) MapView + RouteLine 그리기
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
@@ -94,55 +90,63 @@ fun RoutePreviewMapView(
                     },
                     object : KakaoMapReadyCallback() {
                         override fun onMapReady(map: KakaoMap) {
-                            kakaoMap = map
-                            // ShapeLayer for location traces
-                            shapeLayer = map.shapeManager?.getLayer()
-                            // RouteLineLayer for routeOption
+                            kakaoMap       = map
+                            shapeLayer     = map.shapeManager?.getLayer()
                             routeLineLayer = map.routeLineManager?.getLayer()
 
-                            // 초기 경로 그리기
+                            // 초기 경로 그리기 + 전체 fit
                             routeOption?.let { opts ->
                                 routeLineLayer!!.addRouteLine(opts)
-                                // 카메라 출발점 이동
-                                opts.segments
-                                    .firstOrNull()
-                                    ?.points
-                                    ?.firstOrNull()
-                                    ?.let { start ->
-                                        map.moveCamera(
-                                            CameraUpdateFactory.newCenterPosition(start, defaultZoom),
-                                            CameraAnimation.from(500)
-                                        )
-                                    }
+                                val allPoints = opts.segments.flatMap { it.points }
+                                if (allPoints.isNotEmpty()) {
+                                    val lats = allPoints.map { it.latitude }
+                                    val lons = allPoints.map { it.longitude }
+                                    val bounds = LatLngBounds(
+                                        LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
+                                        LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
+                                    )
+                                    val update = CameraUpdateFactory.fitMapPoints(bounds, 100)
+                                    map.moveCamera(update, CameraAnimation.from(500))
+                                }
                             }
                         }
                         override fun getPosition(): LatLng = LatLng.from(0.0, 0.0)
-                        override fun getZoomLevel(): Int = defaultZoom
+                        override fun getZoomLevel(): Int   = defaultZoom
                     }
                 )
             }
         },
         update = { _ ->
-            // routeOption 이 바뀔 때마다 다시 그리기
+            // 옵션 변경 시 다시 그리기
             routeLineLayer?.apply {
                 removeAll()
                 routeOption?.let { addRouteLine(it) }
             }
 
-            val firstPoint = routeOption
-                ?.segments?.firstOrNull()
-                ?.points?.firstOrNull()
-            firstPoint?.let {
-                kakaoMap?.moveCamera(
-                    CameraUpdateFactory.newCenterPosition(it, defaultZoom),
-                    CameraAnimation.from(300)
-                )
+            routeOption?.let { opts ->
+                val allPoints = opts.segments.flatMap { it.points }
+                if (allPoints.isNotEmpty()) {
+                    val lats = allPoints.map { it.latitude }
+                    val lons = allPoints.map { it.longitude }
+                    val south = lats.minOrNull()!!
+                    val north = lats.maxOrNull()!!
+                    val west  = lons.minOrNull()!!
+                    val east  = lons.maxOrNull()!!
+
+                    val bounds = LatLngBounds(
+                        LatLng.from(south, west),
+                        LatLng.from(north, east)
+                    )
+                    val paddingPx = 100
+                    val update = CameraUpdateFactory.fitMapPoints(bounds, paddingPx)
+
+                    kakaoMap?.moveCamera(update, CameraAnimation.from(500))
+                }
             }
         },
         modifier = Modifier
             .fillMaxSize()
             .pointerInteropFilter { ev ->
-                // 사용자 터치 감지 → 자동 카메라 추적 중지
                 if (ev.action == MotionEvent.ACTION_DOWN) {
                     routePreviewViewModel.setUserInteracting(true)
                 }
@@ -151,17 +155,22 @@ fun RoutePreviewMapView(
             }
     )
 
-    // 6) 위치/헤딩 변화시 도형 갱신 & 자동 카메라 추적
-    LaunchedEffect(shapeLayer, kakaoMap) {
+    // 4) followUser 플래그 켜지면 현재 위치로 카메라 이동
+    LaunchedEffect(followUser, position) {
+        if (followUser) {
+            kakaoMap?.moveCamera(
+                CameraUpdateFactory.newCenterPosition(position, defaultZoom),
+                CameraAnimation.from(300)
+            )
+            onFollowHandled()
+        }
+    }
+
+    // 5) 위치·헤딩 변경 때마다 트레이스 도형 업데이트
+    LaunchedEffect(shapeLayer) {
         snapshotFlow { position to heading }
             .collect { (pos, hd) ->
                 shapeLayer?.let { updateMapShapes(it, pos, hd) }
-                if (!routePreviewViewModel.isUserInteracting.value) {
-                    kakaoMap?.moveCamera(
-                        CameraUpdateFactory.newCenterPosition(pos, defaultZoom),
-                        CameraAnimation.from(300)
-                    )
-                }
             }
     }
 }

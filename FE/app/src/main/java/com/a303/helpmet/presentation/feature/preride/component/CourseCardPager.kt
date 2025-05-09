@@ -31,9 +31,7 @@ fun CourseCardPager(
             }
     }
 
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val cardWidth = screenWidth * 0.85f
-    val sidePadding = (screenWidth - cardWidth) / 2
+
 
     Column(
         modifier = modifier,
@@ -42,12 +40,12 @@ fun CourseCardPager(
     ) {
         HorizontalPager(
             state = pagerState,
-            contentPadding = PaddingValues(horizontal = sidePadding),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             pageSpacing = 8.dp,
         ) { page ->
             CourseCardView(
                 modifier = Modifier
-                    .width(cardWidth)
+                    .fillMaxWidth()
                     .graphicsLayer {
                         val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
                         scaleX = lerp(0.9f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
