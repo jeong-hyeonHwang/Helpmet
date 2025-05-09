@@ -2,6 +2,7 @@ package com.a303.helpmet
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
@@ -13,16 +14,28 @@ import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
 import com.a303.helpmet.presentation.feature.voiceguide.VoiceGuideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.a303.helpmet.util.permission.UsageAccessManager
 import com.kakao.sdk.common.util.Utility.getKeyHash
 
 // MainActivity.kt
 
 class MainActivity : ComponentActivity() {
+
+    private var hasCheckedUsageAccess = false  // 설정 복귀 감지용 플래그
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val keyHash = getKeyHash(this)
         Log.d("HASH", keyHash)
+
+        if (!UsageAccessManager.hasUsageAccess(this)) {
+            UsageAccessManager.showPermissionDialog(this) {
+                UsageAccessManager.requestUsageAccessPermission(this)
+            }
+        } else {
+            hasCheckedUsageAccess = true
+        }
 
         setContent {
             HelpmetTheme {
@@ -47,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // 2-1) 코스 추천 전 주행 시간 설정 화면
-                    composable("ride_time_set"){
+                    composable("ride_time_set") {
                         RideTimeSetScreen(
                             onRideTimeSet = {
                                 // 주행 시간 설정되면 3번 화면으로
@@ -57,7 +70,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // 2-2) 음성 정보 가이드 화면
-                    composable("voice_guide"){
+                    composable("voice_guide") {
                         VoiceGuideScreen()
                     }
 
@@ -82,6 +95,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (!hasCheckedUsageAccess && UsageAccessManager.hasUsageAccess(this)) {
+            Toast.makeText(this, "권한 설정이 완료되었습니다!", Toast.LENGTH_SHORT).show()
+            hasCheckedUsageAccess = true
         }
     }
 }
