@@ -16,32 +16,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.a303.helpmet.data.repository.DeviceRepository
+import com.a303.helpmet.data.service.DeviceService
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun StreamingView() {
+fun StreamingView(
+    viewModel :NavigationViewModel = koinViewModel()
+) {
     val context = LocalContext.current
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val streamingViewHeight = screenWidth * 3 / 4
 
     val gatewayIp = getGatewayIp(context)
-    val infoUrl = "http://$gatewayIp:8080/info"
-    val webPageUrl = "http://$gatewayIp:8080"
+    val webPageUrl = "http://$gatewayIp:8080/"
 
-    var isValidPi by remember { mutableStateOf<Boolean?>(null) }
+    val isValidPi by viewModel.isValidPi.collectAsState()
 
-    LaunchedEffect(infoUrl) {
-        // 확인 HTTP 요청 생략
-        isValidPi = true
+    LaunchedEffect(webPageUrl) {
+        viewModel.validateDevice(webPageUrl)
     }
 
     Column(
@@ -59,7 +61,7 @@ fun StreamingView() {
             }
 
             false -> {
-                Text("올바른 라즈베리파이가 아닙니다.", color = HelpmetTheme.colors.primary)
+                Text("헬프멧과 연결되지 않았습니다.", color = HelpmetTheme.colors.primary)
             }
         }
     }

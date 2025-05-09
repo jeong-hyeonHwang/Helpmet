@@ -2,6 +2,8 @@ package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.a303.helpmet.data.repository.DeviceRepository
+import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.model.StreamingNoticeState
 import kotlinx.coroutines.Job
@@ -48,5 +50,19 @@ class NavigationViewModel() : ViewModel()  {
 
         if (_directionState.value == directionState) return
         _directionState.value = directionState
+    }
+
+
+    private val _isValidPi = MutableStateFlow<Boolean?>(null)
+    val isValidPi: StateFlow<Boolean?> = _isValidPi
+
+    fun validateDevice(baseUrl: String) {
+        viewModelScope.launch {
+            val retrofit = RetrofitProvider.create(baseUrl)
+            val service = retrofit.create(DeviceService::class.java)
+            val repository = DeviceRepository(service)
+
+            _isValidPi.value = repository.isHelpmetDevice()
+        }
     }
 }
