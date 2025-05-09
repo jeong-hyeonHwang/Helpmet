@@ -1,8 +1,15 @@
-from fastapi import APIRouter, Query, HTTPException, Request
+from fastapi import APIRouter, Query, HTTPException, Request, Depends
 import traceback
+from enums.placeType import PlaceType
 from services.route_service import find_route, build_response_from_route
 from services.bike_route_service import find_bike_route
 from services.route_util import nearest_nodes, route_nodes
+
+from core.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from crud.bike_station import fetch_closest_bike_station
+from crud.public_toilet import fetch_closest_public_toilet
+from core.schemas import BikeStationOut
 
 router = APIRouter(
     prefix= "/route"
@@ -56,4 +63,32 @@ async def get_bike_from_nearest(
             ],
         }]
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)}@router.get("/nearby")
+async def get_bike_from_nearest(
+    lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
+    lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
+    place_type: PlaceType = Query(...),
+    db: AsyncSession = Depends(get_db),
+    request: Request = None
+):
+    if place_type == PlaceType.rental:
+        place = await fetch_closest_bike_station(db, lat=lat, lon=lon)
+    elif place_type == PlaceType.toilet:
+        place = await fetch_closest_public_toilet(db, lat=lat, lon=lon)
+    else:
+        return {
+            "status": 400,
+            "message": "지원되지 않는 장소 타입: toilet, retal만 요청하세요.",
+            "data": null
+        }
+    if place is None:
+        raise HTTPException(status_code=404, detail="No nearby place found")
+    
+    route = find_routeroute = find_route(
+        request.app.state.G_walk,
+        from_lat=lat,
+        from_lon=lon,
+        to_lat=float(place.lat),   # ✅ Decimal → float
+        to_lon=float(place.lon)
+    )
+    return build_response_from_route(request.app.state.G_walk, route)
