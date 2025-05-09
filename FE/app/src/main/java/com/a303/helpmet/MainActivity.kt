@@ -1,10 +1,6 @@
 package com.a303.helpmet
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -20,6 +16,7 @@ import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
 import com.a303.helpmet.presentation.feature.voiceguide.VoiceGuideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.a303.helpmet.util.notification.NotificationChannelManager
 import com.a303.helpmet.util.permission.UsageAccessManager
 import com.kakao.sdk.common.util.Utility.getKeyHash
 
@@ -35,8 +32,7 @@ class MainActivity : ComponentActivity() {
         val keyHash = getKeyHash(this)
         Log.d("HASH", keyHash)
 
-
-        createNotificationChannel(this)
+        NotificationChannelManager.setupNotificationChannels(this)
 
         if (!UsageAccessManager.hasUsageAccess(this)) {
             UsageAccessManager.showPermissionDialog(this) {
@@ -125,24 +121,7 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, AppUsageService::class.java)
         startService(intent)
     }
-}
 
 
-fun createNotificationChannel(context: Context) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val alertChannel = NotificationChannel(
-            "usage_alert_channel",
-            "App Usage Alerts",
-            NotificationManager.IMPORTANCE_HIGH
-        )
 
-        val monitorChannel = NotificationChannel(
-            "usage_monitor_channel",
-            "App Usage Monitor Alerts",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(alertChannel)
-        manager.createNotificationChannel(monitorChannel)
-    }
 }
