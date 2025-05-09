@@ -38,15 +38,21 @@ class AppUsageService : Service() {
                 val currentPackage = getForegroundApp()
                 val now = System.currentTimeMillis()
 
-                if (currentPackage != null && currentPackage == targetPackage) {
-                    if (currentPackage == lastPackage) {
-                        if (now - lastStartTime >= 15000) {
-                            showAlertNotification(currentPackage)
-                            lastStartTime = now
-                        }
-                    } else {
+                if (currentPackage == targetPackage) {
+                    if (currentPackage != lastPackage) {
                         lastPackage = currentPackage
                         lastStartTime = now
+                    } else {
+                        val elapsed = now - lastStartTime
+                        if (elapsed in 15000..16000) {
+                            showAlertNotification(currentPackage)
+                        }
+                    }
+                } else {
+                    // 앱을 나가면 타이머 초기화
+                    if (lastPackage == targetPackage) {
+                        lastPackage = null
+                        lastStartTime = 0L
                     }
                 }
 
@@ -54,7 +60,6 @@ class AppUsageService : Service() {
             }
         })
     }
-
     private fun getForegroundApp(): String? {
         val usageStatsManager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
         val now = System.currentTimeMillis()
