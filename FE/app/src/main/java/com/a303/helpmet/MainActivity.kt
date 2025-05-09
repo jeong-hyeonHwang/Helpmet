@@ -1,5 +1,10 @@
 package com.a303.helpmet
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -8,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.a303.helpmet.data.service.AppUsageService
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
 import com.a303.helpmet.presentation.feature.navigation.ui.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
@@ -29,12 +35,16 @@ class MainActivity : ComponentActivity() {
         val keyHash = getKeyHash(this)
         Log.d("HASH", keyHash)
 
+
+        createNotificationChannel(this)
+
         if (!UsageAccessManager.hasUsageAccess(this)) {
             UsageAccessManager.showPermissionDialog(this) {
                 UsageAccessManager.requestUsageAccessPermission(this)
             }
         } else {
             hasCheckedUsageAccess = true
+            startAppUsageService()
         }
 
         setContent {
@@ -104,6 +114,35 @@ class MainActivity : ComponentActivity() {
         if (!hasCheckedUsageAccess && UsageAccessManager.hasUsageAccess(this)) {
             Toast.makeText(this, "권한 설정이 완료되었습니다!", Toast.LENGTH_SHORT).show()
             hasCheckedUsageAccess = true
+
+            startAppUsageService()
+
+
         }
+    }
+
+    private fun startAppUsageService() {
+        val intent = Intent(this, AppUsageService::class.java)
+        startService(intent)
+    }
+}
+
+
+fun createNotificationChannel(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val alertChannel = NotificationChannel(
+            "usage_alert_channel",
+            "App Usage Alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+
+        val monitorChannel = NotificationChannel(
+            "usage_monitor_channel",
+            "App Usage Monitor Alerts",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(alertChannel)
+        manager.createNotificationChannel(monitorChannel)
     }
 }
