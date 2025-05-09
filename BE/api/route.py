@@ -36,6 +36,7 @@ async def get_bike_from_nearest(
     lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
     lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
     max_minutes: int = Query(20, ge=10, le=60),
+    db: AsyncSession = Depends(get_db),
     request: Request = None
 ):
     try:
@@ -47,23 +48,56 @@ async def get_bike_from_nearest(
 
         bike_start_node = bike_route[0]
         w1, w2 = nearest_nodes(G_walk, lat, lon, G_bike.nodes[bike_start_node]["y"], G_bike.nodes[bike_start_node]["x"])
-        walk_route = route_nodes(G_walk, w1, w2)
+        walk_route1 = route_nodes(G_walk, w1, w2)
 
-        walk_result1 = build_response_from_route(G_walk, walk_route)
+        walk_result1 = build_response_from_route(G_walk, walk_route1)
         
-        offset = len(walk_result1["route"])
+        bike_end_node = bike_route[-1]
+        bike_station = await fetch_closest_bike_station(db, G_bike.nodes[bike_end_node]["y"], G_bike.nodes[bike_end_node]["x"])
+        
+        w3, w4 = nearest_nodes(G_walk, G_bike.nodes[bike_end_node]["y"], G_bike.nodes[bike_end_node]["x"], float(bike_station.lat), float(bike_station.lon))
+        walk_route2 = route_nodes(G_walk, w3, w4)
+        walk_result2 = build_response_from_route(G_walk, walk_route2)
+        print(bike_end_node)
+        print(bike_station.addr1)
+        
+        offset1 = len(walk_result1["route"])
+        offset2 = offset1 + len(bike_result["route"])
 
-        return [{
-            "distance_m": round(walk_result1["distance_m"] + bike_result["distance_m"], 1),
-            "estimated_time_sec": round(walk_result1["estimated_time_sec"] + bike_result["estimated_time_sec"], 1),
-            "route": walk_result1["route"] + bike_result["route"],
-            "instructions": walk_result1["instructions"] + [
-                {**instr, "index": instr["index"] + offset}
-                for instr in bike_result["instructions"]
-            ],
+        combined_result = [{
+            "distance_m": round(
+                walk_result1["distance_m"] +
+                bike_result["distance_m"] +
+                walk_result2["distance_m"], 1
+            ),
+            "estimated_time_sec": round(
+                walk_result1["estimated_time_sec"] +
+                bike_result["estimated_time_sec"] +
+                walk_result2["estimated_time_sec"], 1
+            ),
+            "route": (
+                walk_result1["route"] +
+                bike_result["route"] +
+                walk_result2["route"]
+            ),
+            "instructions": (
+                walk_result1["instructions"] +
+                [
+                    {**instr, "index": instr["index"] + offset1}
+                    for instr in bike_result["instructions"]
+                ] +
+                [
+                    {**instr, "index": instr["index"] + offset2}
+                    for instr in walk_result2["instructions"]
+                ]
+            )
         }]
+
+        return combined_result
     except Exception as e:
-        return {"error": str(e)}@router.get("/nearby")
+        return {"error": str(e)}
+    
+@router.get("/nearby")
 async def get_bike_from_nearest(
     lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
     lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
