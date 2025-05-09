@@ -68,7 +68,7 @@ def get_nearest_poi(lat, lon, radius=30):
             return nearest_poi["name"]
     except Exception as e:
         print(f"[ERROR] POI 탐색 실패: {e}")
-    return None
+    return ""
 
 def is_crosswalk_node(node_id, G):
     node_data = G.nodes[node_id]

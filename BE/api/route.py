@@ -44,7 +44,6 @@ async def get_bike_from_nearest(
     request: Request = None
 ):
     result = await find_full_route(db, request, lat, lon, max_minutes)
-    print(type(result))
     return BaseResponse(status=200, message="success", data=result)
     
 @router.get("/nearby", response_model=BaseResponse[RouteResponseDto])
@@ -57,14 +56,16 @@ async def get_bike_from_nearest(
 ):
     if place_type == PlaceType.rental:
         place = await fetch_closest_bike_station(db, lat=lat, lon=lon)
+        end_addr = place.addr1 if place.addr2 is None or len(place.addr2) == 0 else place.addr2  + ' 대여소'
     elif place_type == PlaceType.toilet:
         place = await fetch_closest_public_toilet(db, lat=lat, lon=lon)
+        end_addr = place.name
     else:
         return BaseResponse(status=400, message="지원되지 않는 장소 타입: toilet, retal만 요청하세요.") 
     if place is None:
         raise HTTPException(status_code=404, detail="No nearby place found")
     
-    route = find_route(
+    route : RouteResponseDto = find_route(
         request.app.state.G_walk,
         from_lat=lat,
         from_lon=lon,
@@ -73,5 +74,6 @@ async def get_bike_from_nearest(
     )
    
     result = build_response_from_route(request.app.state.G_walk, route)
+    result.end_addr = end_addr
 
     return BaseResponse(status=200, message="success", data=result)
