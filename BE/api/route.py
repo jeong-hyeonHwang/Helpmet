@@ -31,11 +31,10 @@ async def get_route(
 
         return BaseResponse(status=200, message="success", data=result)
     except Exception as e:
-        print("[ERROR] 예외 발생:")
         traceback.print_exc()  # ✅ 콘솔에 전체 에러 스택 찍힘
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.get("/bike", response_model=BaseResponse[RouteResponseDto])
+@router.get("/bike", response_model=BaseResponse[List[RouteResponseDto]])
 async def get_bike_from_nearest(
     lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
     lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
@@ -44,7 +43,7 @@ async def get_bike_from_nearest(
     request: Request = None
 ):
     result = await find_full_route(db, request, lat, lon, max_minutes)
-    return BaseResponse(status=200, message="success", data=result)
+    return BaseResponse(status=200, message="success", data=[result])
     
 @router.get("/nearby", response_model=BaseResponse[RouteResponseDto])
 async def get_bike_from_nearest(
