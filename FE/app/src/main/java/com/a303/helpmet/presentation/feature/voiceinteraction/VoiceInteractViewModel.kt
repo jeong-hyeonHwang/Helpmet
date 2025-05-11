@@ -11,6 +11,7 @@ import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationView
 import com.a303.helpmet.presentation.feature.voiceinteraction.sound.TickSoundManager
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.*
 import com.a303.helpmet.presentation.feature.voiceinteraction.util.UserReplyResponse
+import com.a303.helpmet.presentation.model.DirectionStateManager
 import com.a303.helpmet.presentation.model.VoiceCommand
 import com.a303.helpmet.util.handler.VoiceInteractionHandler
 
@@ -19,18 +20,18 @@ class VoiceInteractViewModel(
     private val navigateToRestroom: NavigateToRestroomUseCase,
     private val navigateToRental: NavigateToRentalStationUseCase,
     private val endGuide: EndGuideUseCase,
-    private val navigationViewModel: NavigationViewModel
 ) : AndroidViewModel(application) {
 
     private val tickSoundManager = TickSoundManager(
         context = application.applicationContext,
-        directionState = navigationViewModel.directionState,
+        directionState = DirectionStateManager.directionState,
         scope = viewModelScope
     )
 
     private val playTurnSignal = PlayTurnSignalSoundUseCase(
         tickSoundManager = tickSoundManager,
-        updateDirectionState = { navigationViewModel.updateDirectionState(it) }
+//        updateDirectionState = { navigationViewModel.updateDirectionState(it) }
+        updateDirectionState = { DirectionStateManager.update(it) }
     )
 
     private var promptContext: VoicePromptContext = VoicePromptContext.None
@@ -123,6 +124,7 @@ class VoiceInteractViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        DirectionStateManager.update(DirectionState.None)
         voiceHandler.destroy()
         tickSoundManager.releaseAll()
     }

@@ -2,6 +2,7 @@ package com.a303.helpmet.presentation.feature.voiceinteraction.sound
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import kotlinx.coroutines.CoroutineScope
@@ -70,11 +71,16 @@ class TickSoundManager(
 
     fun stop() {
         mediaPlayer?.let {
-            if(it.isPlaying){
-                it.stop()
+            try {
+                if (it.isPlaying) {
+                    it.stop()
+                }
+            } catch (e: IllegalStateException) {
+                Log.w("TickSound", "MediaPlayer is in illegal state during stop: ${e.message}")
             }
             it.release()
         }
+        mediaPlayer = null
     }
 
     fun releaseAll(){
