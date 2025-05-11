@@ -1,6 +1,5 @@
 package com.a303.helpmet.di
 
-import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.EndGuideUseCase
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.NavigateToRentalStationUseCase
@@ -15,7 +14,6 @@ val voiceInteractionModule = module {
             navigateToRestroom = get(),
             navigateToRental = get(),
             endGuide = get(),
-            NavigationViewModel()
         )
     }
 
