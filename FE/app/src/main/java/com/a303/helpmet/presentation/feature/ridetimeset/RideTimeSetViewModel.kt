@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class RideTimeSetViewModel : ViewModel() {
-    private val _rideTime = MutableStateFlow(30)
+    private val _rideTime = MutableStateFlow(60)
     val rideTime: StateFlow<Int> = _rideTime
 
     private val _warning = MutableStateFlow(RideTimeWarning.NONE)
