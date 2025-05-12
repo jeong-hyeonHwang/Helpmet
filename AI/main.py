@@ -13,12 +13,19 @@ from ultralytics import YOLO
 import asyncio
 from typing import List, Dict
 from collections import defaultdict
+from arrow import arrow_loop, turn_on_arrow, turn_off_arrow
+from contextlib import asynccontextmanager
 
 # 확장된 타입 힌트
 from typing import Dict, List, Optional, Tuple, Union
 
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    asyncio.create_task(arrow_loop())
+    yield
+
 # FastAPI 앱 초기화
-app = FastAPI(title="YOLO Object Approach Detection Server with ByteTrack")
+app = FastAPI(title="YOLO Object Approach Detection Server with ByteTrack", lifespan=lifespan)
 
 # 정적 파일 및 템플릿 설정
 templates = Jinja2Templates(directory="templates")
@@ -155,7 +162,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                             else:
                                 obj_id = f"temp_{frame_id}_{i}"
                                 track_id = i
-                            
+
                             # 경계 상자
                             x1, y1, x2, y2 = map(int, det.xyxy[0])
                             w, h = x2 - x1, y2 - y1
@@ -181,7 +188,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
                             # 접근 계산
                             is_approaching, approach_speed = calculate_approaching(
-                                curr_box, 
+                                curr_box,
                                 object_history[obj_id]["positions"]
                             )
 
@@ -231,10 +238,38 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                     }
                     await manager.send_message(json.dumps(result_data), client_id)
 
+                elif message.get("type") == "turn_left":
+                    command = message.get("command")
+
+                    if command == "start":
+                        turn_on_arrow(0)
+
+                    elif command == "stop":
+                        turn_off_arrow(0)
+
+                elif message.get("type") == "turn_right":
+                    command = message.get("command")
+
+                    if command == "start":
+                        turn_on_arrow(1)
+                    elif command == "stop":
+                        turn_off_arrow(1)
+
+                elif message.get("type") == "turn_off":
+                    command = message.get("command")
+
+                    if command == "left" or command == "both":
+                        turn_off_arrow(0)
+
+                    if command == "right" or command == "both":
+                        turn_off_arrow(1)
+
             except Exception as e:
                 print(f"메시지 처리 오류: {str(e)}")
                 error_data = {"type": "error", "message": str(e)}
                 await manager.send_message(json.dumps(error_data), client_id)
+
+
 
     except WebSocketDisconnect:
         manager.disconnect(client_id)
