@@ -52,7 +52,9 @@ async def arrow_loop():
 
 def turn_on_arrow(direction):
     key = "left" if direction == 0 else "right"
+    reverse_key = "right" if direction == 0 else "left"
     arrow_state[key] = MAX_REPEAT
+    arrow_state[reverse_key] = 0
 
 def turn_off_arrow(direction):
     key = "left" if direction == 0 else "right"
