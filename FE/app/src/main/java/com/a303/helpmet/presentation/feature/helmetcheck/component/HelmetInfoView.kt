@@ -1,6 +1,12 @@
 package com.a303.helpmet.presentation.feature.helmetcheck.component
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.wifi.ScanResult
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
@@ -12,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.a303.helpmet.R
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.a303.helpmet.presentation.model.HelmetConnectionState
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
@@ -24,10 +31,31 @@ fun HelmetInfoView(
     val context = LocalContext.current
     val isConnected by viewModel.isConnected.collectAsState()
     val connectionState by viewModel.connectionState.collectAsState()
+    val toastShown by viewModel.toastShown.collectAsState()
+
+    val wifiPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // 권한이 허용되면 ViewModel에서 스캔 시작
+            viewModel.startSearchAndScan(context) { scanResults ->
+                val helmetResult = scanResults.firstOrNull { it.SSID.startsWith("HELPMET") }
+                if (helmetResult != null) {
+                    viewModel.setHelmetName(helmetResult.SSID)
+                } else {
+                    Toast.makeText(context, context.getString(R.string.error_helmet_not_found), Toast.LENGTH_SHORT).show()
+                    viewModel.cancelDialog()
+                }
+            }
+        } else {
+            Toast.makeText(context, context.getString(R.string.permission_location_required), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(connectionState) {
-        if (connectionState == HelmetConnectionState.Success) {
+        if (connectionState == HelmetConnectionState.Success && !toastShown) {
             Toast.makeText(context, context.getString(R.string.dialog_connect_helmet_success), Toast.LENGTH_SHORT).show()
+            viewModel.markToastShown()
         }
     }
 
@@ -40,6 +68,9 @@ fun HelmetInfoView(
         }
         HelmetConnectionState.Connecting -> {
             LoadingDialog(viewModel, stringResource(R.string.dialog_connecting_helmet))
+        }
+        HelmetConnectionState.Disconnecting -> {
+            LoadingDialog(viewModel, stringResource(R.string.dialog_diconnectiong_helmet))
         }
         HelmetConnectionState.Success,
         HelmetConnectionState.Idle -> Unit
@@ -120,7 +151,27 @@ fun HelmetInfoView(
                                 .height(30.dp),
                             shape = RoundedCornerShape(20.dp),
                             contentPadding = PaddingValues(horizontal = 21.dp, vertical = 9.dp),
-                            onClick = { if (isConnected) viewModel.cancelDialog() else viewModel.startSearch() }
+                            onClick = {
+                                if (isConnected) {
+                                    viewModel.disconnectFromHelmetAp(context)
+                                }
+                                else {
+                                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                        wifiPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                                        viewModel.markToastUnShown()
+                                    } else {
+                                        viewModel.startSearchAndScan(context) { scanResults ->
+                                            val helmetResult = scanResults.firstOrNull { it.SSID.startsWith("HELPMET") }
+                                            if (helmetResult != null) {
+                                                viewModel.setHelmetName(helmetResult.SSID)
+                                            } else {
+                                                Toast.makeText(context, context.getString(R.string.error_helmet_not_found), Toast.LENGTH_SHORT).show()
+                                                viewModel.cancelDialog()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         ) {
                             Text(
                                 text = if (isConnected) stringResource(R.string.end_connection) else stringResource(R.string.begin_connection),

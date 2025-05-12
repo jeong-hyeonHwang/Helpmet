@@ -7,9 +7,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.a303.helpmet.R
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
@@ -23,6 +25,7 @@ fun ConnectHelmetDialog(
     viewModel: HelmetCheckViewModel = koinViewModel(),
 ) {
     val helmetName by viewModel.helmetName.collectAsState()
+    val context = LocalContext.current
 
     Dialog(onDismissRequest = { viewModel.cancelDialog() }) {
         Surface(
@@ -44,13 +47,19 @@ fun ConnectHelmetDialog(
                     style = HelpmetTheme.typography.bodySmall,
                     color = HelpmetTheme.colors.black1
                 )
+                Text(
+                    text = stringResource(R.string.info_connect_helmet),
+                    style = HelpmetTheme.typography.caption.copy(
+                        lineHeight = 14.sp
+                    ),
+                    color = HelpmetTheme.colors.black1
+                )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { viewModel.confirmConnection() },
+                        onClick = { viewModel.connectToHelmetAp(context) },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
