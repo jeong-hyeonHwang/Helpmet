@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.dto.response.NavigationResponseDto
+import com.a303.helpmet.data.network.api_services.ApiResult
 import com.a303.helpmet.data.service.NavigationService
 import com.a303.helpmet.domain.mapper.toDomain
 import com.a303.helpmet.presentation.mapper.toRouteInfo
@@ -35,21 +36,23 @@ class PreRideViewModel (
 
     fun loadRoutes(context: Context) {
         viewModelScope.launch {
-            val resp: Response<List<NavigationResponseDto>> =
-                service.getBikeNavigationRouteList()
+            when (val result = service.getBikeNavigationRouteList()) {
+                is ApiResult.Success -> {
+                    val dtoList    = result.data
+                    val domainList = dtoList.map { it.toDomain() }
+                    val options    = domainList.map { it.toRouteLineOptions(context) }
+                    val infoList   = domainList.mapIndexed { index, domain ->
+                        domain.toRouteInfo(index)
+                    }
 
-            if (resp.isSuccessful) {
-                val dtoList    = resp.body().orEmpty()
-                val domainList = dtoList.map { it.toDomain() }
-                val options    = domainList.map { it.toRouteLineOptions(context) }
-                val infoList = domainList.mapIndexed { index, domain ->
-                    domain.toRouteInfo(index)
+                    _routeOptions.value = options
+                    _routeInfoList.value = infoList
                 }
-                _routeOptions.value = options
-                _routeInfoList.value = infoList
-            } else {
-                _routeOptions.value = emptyList()
-                _routeInfoList.value = emptyList()
+
+                is ApiResult.Error -> {
+                    _routeOptions.value = emptyList()
+                    _routeInfoList.value = emptyList()
+                }
             }
         }
     }

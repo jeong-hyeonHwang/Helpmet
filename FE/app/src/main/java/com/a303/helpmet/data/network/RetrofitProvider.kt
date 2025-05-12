@@ -1,5 +1,6 @@
 package com.a303.helpmet.data.network
 
+import com.a303.helpmet.data.network.adapter.ApiCallAdapterFactory
 import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.data.service.NavigationService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -36,6 +37,7 @@ object RetrofitClient : KoinComponent {
             .baseUrl("https://api.yourserver.com/")
             .client(okHttpClient)
             .addConverterFactory(jsonParser.asConverterFactory("application/json".toMediaType()))
+            .addCallAdapterFactory(ApiCallAdapterFactory())
             .build()
     }
 
