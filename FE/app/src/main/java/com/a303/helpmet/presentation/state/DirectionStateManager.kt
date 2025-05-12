@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.model
+package com.a303.helpmet.presentation.state
 
 import com.a303.helpmet.domain.model.DirectionState
 import kotlinx.coroutines.flow.MutableStateFlow

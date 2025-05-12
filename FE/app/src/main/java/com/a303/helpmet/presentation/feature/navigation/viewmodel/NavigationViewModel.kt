@@ -6,7 +6,7 @@ import com.a303.helpmet.data.repository.DeviceRepository
 import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.model.StreamingNoticeState
-import com.a303.helpmet.presentation.model.DirectionStateManager
+import com.a303.helpmet.presentation.state.DirectionStateManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

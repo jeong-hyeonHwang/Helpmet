@@ -7,11 +7,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
-import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.sound.TickSoundManager
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.*
 import com.a303.helpmet.presentation.feature.voiceinteraction.util.UserReplyResponse
-import com.a303.helpmet.presentation.model.DirectionStateManager
+import com.a303.helpmet.presentation.state.DirectionStateManager
 import com.a303.helpmet.presentation.model.VoiceCommand
 import com.a303.helpmet.util.handler.VoiceInteractionHandler
 
