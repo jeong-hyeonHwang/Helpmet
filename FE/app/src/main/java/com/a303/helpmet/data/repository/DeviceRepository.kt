@@ -6,7 +6,7 @@ class DeviceRepository(private val service: DeviceService) {
     suspend fun isHelpmetDevice(): Boolean {
         return try {
             val response = service.getDeviceInfo()
-            response.isSuccessful && response.body()?.serviceName == "helpmet"
+            response.isSuccessful && response.body()?.serviceName?.equals("helpmet", ignoreCase = true) == true
         } catch (e: Exception) {
             false
         }
