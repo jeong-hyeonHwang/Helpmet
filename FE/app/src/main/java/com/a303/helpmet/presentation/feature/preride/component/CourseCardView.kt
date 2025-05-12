@@ -21,7 +21,10 @@ fun CourseCardView(
     val viewModel = PreRideViewModel()
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = HelpmetTheme.colors.white1 // ← 원하는 배경색으로 바꾸기
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
