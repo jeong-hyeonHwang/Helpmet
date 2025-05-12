@@ -5,5 +5,6 @@ enum class HelmetConnectionState {
     Searching, // 헬멧을 찾는 중
     Found, // 헬멧 찾음
     Connecting, // 헬멧 연결 중
-    Success // 연결 성공(메시지 띄움)
+    Success, // 연결 성공(메시지 띄움)
+    Disconnecting // 연결 해제 중
 }
