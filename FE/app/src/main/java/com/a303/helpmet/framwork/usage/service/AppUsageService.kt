@@ -97,8 +97,8 @@ class AppUsageService : Service() {
 
         val notification = NotificationCompat.Builder(this, "usage_alert_channel")
             .setSmallIcon(R.drawable.ic_util_helmet)
-            .setContentTitle("따릉이를 이용하시나요?")
-            .setContentText("헬프멧과 함께 안전하고 편리하게 라이딩해보세요!")
+            .setContentTitle(this.getString(R.string.helpmet_alert_title))
+            .setContentText(this.getString(R.string.helpmet_alert_content))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -112,8 +112,8 @@ class AppUsageService : Service() {
 
         return NotificationCompat.Builder(this, "usage_monitor_channel")
             .setSmallIcon(R.drawable.ic_util_helmet)
-            .setContentTitle("헬프멧")
-            .setContentText("따릉이를 기다리고 있어요!")
+            .setContentTitle(this.getString(R.string.helpmet_monitor_title))
+            .setContentText(this.getString(R.string.helpmet_monitor_content))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }

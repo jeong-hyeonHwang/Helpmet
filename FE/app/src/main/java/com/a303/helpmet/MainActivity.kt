@@ -16,6 +16,7 @@ import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
 import com.a303.helpmet.presentation.feature.voiceguide.VoiceGuideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.framwork.notification.NotificationChannelManager
+import com.a303.helpmet.framwork.usage.service.AppUsageService
 import com.a303.helpmet.framwork.usage.util.UsageAccessManager
 import com.kakao.sdk.common.util.Utility.getKeyHash
 
@@ -107,7 +108,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
 
         if (!hasCheckedUsageAccess && UsageAccessManager.hasUsageAccess(this)) {
-            Toast.makeText(this, "권한 설정이 완료되었습니다!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, this.getString(R.string.permission_complete), Toast.LENGTH_SHORT).show()
             hasCheckedUsageAccess = true
 
             startAppUsageService()

@@ -5,6 +5,10 @@ import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.ui.res.stringResource
+import com.a303.helpmet.R
+import androidx.compose.ui.res.stringResource
+
 
 object UsageAccessManager {
 
@@ -26,10 +30,11 @@ object UsageAccessManager {
 
     fun showPermissionDialog(context: Context, onAccepted: () -> Unit) {
         AlertDialog.Builder(context)
-            .setTitle("따릉이를 빌리면 자동으로 알림을 드려요!")
-            .setMessage("서비스 제공을 위해 사용 정보 접근 권한이 필요해요.")
-            .setPositiveButton("설정으로 이동") { _, _ -> onAccepted() }
-            .setNegativeButton("취소", null)
+            .setTitle(
+                context.getString(R.string.permission_title))
+            .setMessage(context.getString(R.string.permission_content))
+            .setPositiveButton(context.getString(R.string.permission_button_setting)) { _, _ -> onAccepted() }
+            .setNegativeButton(context.getString(R.string.permission_button_cancel), null)
             .show()
     }
 }
