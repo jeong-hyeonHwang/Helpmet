@@ -15,6 +15,10 @@
     <string name="dialog_connect_helmet_success">헬멧과 연결되었습니다!</string>
     <string name="dialog_searching_helmet">헬멧을 찾는 중입니다...</string>
     <string name="dialog_connecting_helmet">헬멧과 연결 중입니다...</string>
+    <string name="dialog_connecting_error_helmet">연결에 실패했습니다. 잠시 후 다시 시도해주세요.</string>
+    <string name="dialog_diconnecting_helmet">헬멧 연결을 해제하는 중입니다...</string>
+    <string name="dialog_disconnect_helmet">성공적으로 헬멧 연결을 해제했습니다.</string>
+    <string name="dialog_diconnecting_error_helmet">연결 해제 중 오류가 발생했습니다.</string>
 
     <!-- 코스 추천 -->
     <string name="recommend_course_hangang">한강 주행 코스 추천</string>
@@ -33,7 +37,6 @@
     <string name="voice_guide_rental">\"대여소\"</string>
     <string name="prompt_voice_guide_rental">현재 가장 가까운\n대여소로 안내</string>
 
-
     <!-- 시작 버튼 -->
     <string name="start">시작하기</string>
     <string name="begin_connection">연결 시작</string>
@@ -42,6 +45,12 @@
     <!-- 헬멧 선택 -->
     <string name="helmet_found">%1$s 헬멧을 찾았습니다.</string>
     <string name="confirm_connect_helmet">해당 헬멧과 연결하시겠어요?</string>
+    <string name="info_connect_helmet">HELPMET Wi-Fi는 인터넷이 없는 장치입니다.&#10;
+    정상적인 사용을 위해 연결 팝업에서 \'계속 사용\'을 눌러주세요.&#10;
+    (또는 개발자 옵션에서 \'모바일 데이터 항상 켜기\'를 설정해주세요.)</string>
+
+    <string name="error_helmet_not_found">HELPMET Wi-Fi를 찾을 수 없습니다.</string>
+    <string name="permission_location_required">Wi-Fi 스캔을 위해 위치 권한이 필요합니다.</string>
 
     <!-- 주행 시간 설정 -->
     <string name="set_ride_time">주행 시간 설정</string>
