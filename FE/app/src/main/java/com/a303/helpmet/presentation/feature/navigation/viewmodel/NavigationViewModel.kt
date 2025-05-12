@@ -7,6 +7,7 @@ import com.a303.helpmet.data.repository.DeviceRepository
 import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.model.StreamingNoticeState
+import com.a303.helpmet.presentation.state.DirectionStateManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,8 +23,7 @@ class NavigationViewModel(
     private val _noticeState = MutableStateFlow(StreamingNoticeState.Default)
     val noticeState: StateFlow<StreamingNoticeState> = _noticeState
 
-    private val _directionState = MutableStateFlow(DirectionState.None)
-    val directionState: StateFlow<DirectionState> = _directionState
+    val directionState: StateFlow<DirectionState> = DirectionStateManager.directionState
 
     private var noticeResetJob: Job? = null
 
@@ -45,14 +45,6 @@ class NavigationViewModel(
                 _noticeState.value = StreamingNoticeState.Default
             }
         }
-    }
-
-    // 방향 지시등 상태 업데이트 함수
-    fun updateDirectionState(state: DirectionState?) {
-        val directionState = state ?: DirectionState.None
-
-        if (_directionState.value == directionState) return
-        _directionState.value = directionState
     }
 
 

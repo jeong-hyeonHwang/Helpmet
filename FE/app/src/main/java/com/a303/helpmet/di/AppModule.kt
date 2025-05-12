@@ -7,5 +7,6 @@ val appModule = listOf(
     prerideModule,
     rideTimeSetModule,
     navigationModule,
-    voiceGuideModule
+    voiceGuideModule,
+    voiceInteractionModule
 )

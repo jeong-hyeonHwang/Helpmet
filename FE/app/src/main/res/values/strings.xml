@@ -78,4 +78,15 @@
 
     <!-- 주변 탐색 -->
     <string name="scanning_surroundings">%1$s 탐색하고 있습니다.</string>
+
+    <!-- 음성 가이드 멘트 -->
+    <string name="voice_permission_required">음성 인식을 위해 마이크 권한이 필요합니다.</string>
+    <string name="voice_reroute_message">경로를 재탐색합니다.</string>
+    <string name="voice_guide_end_message">안내를 종료합니다.</string>
+    <string name="voice_turn_left_signal">좌회전 신호를 켰습니다.</string>
+    <string name="voice_turn_right_signal">우회전 신호를 켰습니다.</string>
+    <string name="voice_prompt_restroom">가장 가까운 화장실로 안내할까요?</string>
+    <string name="voice_prompt_rental">가장 가까운 대여소로 안내할까요?</string>
+    <string name="voice_restart_failed">음성 인식을 시작할 수 없어요. 설정에서 마이크 권한을 확인해주세요.</string>
+
 </resources>
