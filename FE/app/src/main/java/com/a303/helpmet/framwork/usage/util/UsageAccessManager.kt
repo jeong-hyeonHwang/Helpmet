@@ -1,4 +1,4 @@
-package com.a303.helpmet.util.permission
+package com.a303.helpmet.framwork.usage.util
 
 import android.app.AlertDialog
 import android.app.AppOpsManager
