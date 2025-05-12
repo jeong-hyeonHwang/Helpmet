@@ -73,6 +73,9 @@ fun NavigationScreen(
     }
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
 
+    // 2) 내 위치 자동 추적 플래그
+    var followUser by remember { mutableStateOf(true) }
+
     Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
             StreamingView()
@@ -102,7 +105,8 @@ fun NavigationScreen(
                 .weight(1f)
         ) {
             MapScreen(
-                defaultZoom = 15
+                followUser = followUser,
+                onFollowHandled = { followUser = false }
             )
             Box(
                 modifier = Modifier

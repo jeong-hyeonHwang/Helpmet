@@ -40,14 +40,14 @@ fun RoutePreviewMapView(
     onFollowHandled: () -> Unit,
     defaultZoom: Int = 17,
     updateMapShapes: UpdateMapShapesUseCase = UpdateMapShapesUseCase(),
-    routePreviewViewModel: RoutePreviewViewModel = viewModel()
+    userPositionViewModel: UserPositionViewModel = viewModel()
 ) {
     val context        = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // 1) 현재 위치·헤딩 관찰
-    val position by routePreviewViewModel.position.collectAsState()
-    val heading  by routePreviewViewModel.heading.collectAsState()
+    val position by userPositionViewModel.position.collectAsState()
+    val heading  by userPositionViewModel.heading.collectAsState()
 
     // 2) 퍼미션 체크 및 요청
     var hasLocPerm by remember {
@@ -60,11 +60,12 @@ fun RoutePreviewMapView(
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasLocPerm = granted }
+
     LaunchedEffect(Unit) {
         if (!hasLocPerm) permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
     LaunchedEffect(hasLocPerm) {
-        if (hasLocPerm) routePreviewViewModel.startTracking(context) { _, _ -> }
+        if (hasLocPerm) userPositionViewModel.startTracking(context) { _, _ -> }
     }
 
     // 3) MapView·KakaoMap·레이어 참조
@@ -148,7 +149,7 @@ fun RoutePreviewMapView(
             .fillMaxSize()
             .pointerInteropFilter { ev ->
                 if (ev.action == MotionEvent.ACTION_DOWN) {
-                    routePreviewViewModel.setUserInteracting(true)
+                    userPositionViewModel.setUserInteracting(true)
                 }
                 mapViewRef?.dispatchTouchEvent(ev)
                 true
