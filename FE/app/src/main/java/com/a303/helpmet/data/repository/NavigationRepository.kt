@@ -8,7 +8,18 @@ import com.a303.helpmet.data.service.NavigationService
 import retrofit2.Response
 
 class NavigationRepository(private val service: NavigationService) {
-    suspend fun getBikeNavigationRouteList(): ApiResult<List<NavigationResponseDto>> {
-        return service.getBikeNavigationRouteList()
+    suspend fun getBikeNavigationRouteList(
+        fromLat: Double,
+        fromLng: Double,
+        toLat: Double,
+        toLng: Double
+    ): ApiResult<List<NavigationResponseDto>> {
+        return service.getBikeNavigationRouteList(
+            fromLat = fromLat,
+            fromLng = fromLng,
+            toLat = toLat,
+            toLng = toLng
+        )
     }
+
 }

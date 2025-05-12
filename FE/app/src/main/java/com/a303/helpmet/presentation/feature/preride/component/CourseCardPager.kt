@@ -42,14 +42,20 @@ fun CourseCardPager(
             contentPadding = PaddingValues(horizontal = 16.dp),
             pageSpacing = 8.dp,
         ) { page ->
+
+            val pageOffset = (
+                    (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                    ).absoluteValue
+
+            val scale = lerp(start = 0.9f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+            val alpha = lerp(start = 0.88f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
             CourseCardView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {
-                        val pageOffset = ((pagerState.currentPage - page) + pagerState.currentPageOffsetFraction).absoluteValue
-                        scaleX = lerp(0.9f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
-                        scaleY = scaleX
-                        alpha = lerp(0.85f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                        scaleX = scale
+                        scaleY = scale
+                        this.alpha = alpha
                     },
                 course = courses[page],
                 onSelectCourse = onSelectCourse,

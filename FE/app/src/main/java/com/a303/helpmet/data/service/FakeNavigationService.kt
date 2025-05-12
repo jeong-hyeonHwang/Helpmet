@@ -6,7 +6,12 @@ import com.a303.helpmet.data.network.api_services.BaseResponse
 import kotlinx.serialization.json.Json
 
 class FakeNavigationService : NavigationService {
-    override suspend fun getBikeNavigationRouteList(): ApiResult<List<NavigationResponseDto>> {
+    override suspend fun getBikeNavigationRouteList(
+        fromLat: Double,
+        fromLng: Double,
+        toLat: Double,
+        toLng: Double
+    ): ApiResult<List<NavigationResponseDto>> {
 
         val jsonString = """
 {

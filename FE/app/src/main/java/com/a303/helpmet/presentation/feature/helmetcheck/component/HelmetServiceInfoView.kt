@@ -16,14 +16,16 @@ import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 
 @Composable
-fun HelmetServiceInfoView() {
+fun HelmetServiceInfoView(
+    onStartVoiceGuide: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(10.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(
             containerColor = HelpmetTheme.colors.black1,
         ),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().clickable { onStartVoiceGuide() }
     ){
         Column(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -54,5 +56,5 @@ fun HelmetServiceInfoView() {
 @Preview
 @Composable
 fun HelmetServiceInfoViewPreview() {
-    HelmetServiceInfoView()
+    HelmetServiceInfoView(onStartVoiceGuide={})
 }

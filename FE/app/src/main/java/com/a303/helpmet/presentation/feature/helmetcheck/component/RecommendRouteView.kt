@@ -72,6 +72,7 @@ fun RecommendRouteView(
 fun HelpmetCheckScreenPreview() {
     HelmetCheckScreen(
         viewModel = HelmetCheckViewModel(),
-        onHelmetChecked = {}
+        onHelmetChecked = {},
+        onStartVoiceGuide = {}
     )
 }

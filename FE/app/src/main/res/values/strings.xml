@@ -22,6 +22,17 @@
 
     <!-- 음성 가이드 -->
     <string name="voice_guide">음성 정보 가이드</string>
+    <string name="prompt_voice_guide">헬프멧은 음성 기반의 커넥션을 지향합니다.</string>
+    <string name="voice_guide_turn_signal">\"좌회전\"  \"우회전\"</string>
+    <string name="prompt_voice_guide_turn_signal_helmet">헬멧의\n방향 지시등 활성화</string>
+    <string name="prompt_voice_guide_turn_signal_app">앱에서 활성화 된\n방향 지시등 확인 가능</string>
+    <string name="voice_guide_toilet">\"화장실\"</string>
+    <string name="prompt_voice_guide_toilet">현재 가장 가까운\n화장실로 안내</string>
+    <string name="voice_guide_end">\"안내 종료\"</string>
+    <string name="prompt_voice_guide_end">안내 종료 후\n시작화면으로 이동</string>
+    <string name="voice_guide_rental">\"대여소\"</string>
+    <string name="prompt_voice_guide_rental">현재 가장 가까운\n대여소로 안내</string>
+
 
     <!-- 시작 버튼 -->
     <string name="start">시작하기</string>
@@ -39,9 +50,15 @@
     <string name="error_min_time">최소 %1$d분 이상의 코스만 설정할 수 있어요.</string>
     <string name="error_max_time">최대 %1$d분 이하의 코스만 설정할 수 있어요.</string>
 
+
     <!-- 코스 안내 시작 -->
     <string name="start_course_recommend">주행 코스 추천 시작하기</string>
     <string name="start_navigation">안내 시작하기</string>
+
+    <!-- 노이즈 캔슬링 알림 -->
+    <string name="noise_canceling_title">이어폰이 연결된 상태입니다.</string>
+    <string name="noise_canceling_content">노이즈 캔슬링이 켜져 있다면,\n도로 위의 위험 신호를 놓칠 수 있어요!\n\n안전을 위해 노이즈 캔슬링을 꺼주세요.</string>
+    <string name="noise_canceling_check">확인했어요</string>
 
     <!-- 코스 상세 -->
     <string name="course_number">주행 코스 %1$d</string>

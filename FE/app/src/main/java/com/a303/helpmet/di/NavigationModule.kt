@@ -6,6 +6,8 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val navigationModule = module {
-    viewModel { NavigationViewModel() }
+    viewModel { NavigationViewModel(
+        deviceRepository = get()
+    ) }
     viewModel { MapViewModel() }
 }

@@ -7,4 +7,5 @@ sealed class NavRoutes(val route: String) {
         fun createRoute(courseId: String) = "navigation/$courseId"
     }
     object RideTimeSet: NavRoutes("ride_time_set")
+    object VoiceGuide: NavRoutes("voice_guide")
 }

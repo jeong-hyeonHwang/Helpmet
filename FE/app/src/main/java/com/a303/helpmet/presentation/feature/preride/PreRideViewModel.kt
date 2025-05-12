@@ -36,7 +36,7 @@ class PreRideViewModel (
 
     fun loadRoutes(context: Context) {
         viewModelScope.launch {
-            when (val result = service.getBikeNavigationRouteList()) {
+            when (val result = service.getBikeNavigationRouteList(0.0,0.0,0.0,0.0)) {
                 is ApiResult.Success -> {
                     val dtoList    = result.data
                     val domainList = dtoList.map { it.toDomain() }

@@ -2,6 +2,10 @@ package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.a303.helpmet.data.network.RetrofitProvider
+import com.a303.helpmet.data.repository.DeviceRepository
+import com.a303.helpmet.data.service.DeviceService
+import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.model.StreamingNoticeState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -9,12 +13,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class NavigationViewModel() : ViewModel()  {
+class NavigationViewModel(
+    private val deviceRepository: DeviceRepository
+) : ViewModel()  {
     private val _isActiveStreamingView = MutableStateFlow(true)
     val isActiveStreamingView: StateFlow<Boolean> = _isActiveStreamingView
 
     private val _noticeState = MutableStateFlow(StreamingNoticeState.Default)
     val noticeState: StateFlow<StreamingNoticeState> = _noticeState
+
+    private val _directionState = MutableStateFlow(DirectionState.None)
+    val directionState: StateFlow<DirectionState> = _directionState
+
     private var noticeResetJob: Job? = null
 
     // 토글 함수
@@ -24,7 +34,6 @@ class NavigationViewModel() : ViewModel()  {
 
     // 안내 멘트 업데이트 함수
     fun updateNoticeState(state: StreamingNoticeState) {
-        // 동일 상태로 반복 호출되는 것 방지
         if (_noticeState.value == state) return
 
         if (state == StreamingNoticeState.Danger || state == StreamingNoticeState.Caution) {
@@ -35,6 +44,24 @@ class NavigationViewModel() : ViewModel()  {
                 delay(5000)
                 _noticeState.value = StreamingNoticeState.Default
             }
+        }
+    }
+
+    // 방향 지시등 상태 업데이트 함수
+    fun updateDirectionState(state: DirectionState?) {
+        val directionState = state ?: DirectionState.None
+
+        if (_directionState.value == directionState) return
+        _directionState.value = directionState
+    }
+
+
+    private val _isValidPi = MutableStateFlow<Boolean?>(null)
+    val isValidPi: StateFlow<Boolean?> = _isValidPi
+
+    fun validateDevice(baseUrl: String) {
+        viewModelScope.launch {
+            _isValidPi.value = deviceRepository.isHelpmetDevice()
         }
     }
 }

@@ -1,10 +1,11 @@
 package com.a303.helpmet.di
 
 val appModule = listOf(
-//    networkModule,
+    networkModule,
     fakeNetworkModule,
     helmetCheckModule,
     prerideModule,
     rideTimeSetModule,
-    navigationModule
+    navigationModule,
+    voiceGuideModule
 )
