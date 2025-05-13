@@ -1,5 +1,6 @@
 package com.a303.helpmet.presentation.feature.navigation.usecase
 
+import android.util.Log
 import com.a303.helpmet.presentation.feature.navigation.RADIUS
 import com.a303.helpmet.presentation.feature.navigation.TRI_F
 import com.a303.helpmet.presentation.feature.navigation.TRI_S
@@ -23,8 +24,9 @@ class UpdateMapShapesUseCase {
         triF: Float = TRI_F,
         triS: Float = TRI_S
     ) {
-        if (circlePolygon == null || trianglePolygon == null) {
-            // 최초 한 번 폴리곤 생성
+        if (circlePolygon == null && trianglePolygon == null) {
+            layer.removeAll()
+
             circlePolygon = layer.addPolygon(
                 PolygonOptions.from(
                     DotPoints.fromCircle(position, radius),

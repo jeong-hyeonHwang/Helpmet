@@ -11,13 +11,13 @@ import androidx.compose.ui.res.stringResource
 import com.a303.helpmet.R
 import com.a303.helpmet.presentation.model.RouteInfo
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.kakao.vectormap.route.RouteLineOptions
 
 @Composable
 fun CourseCardView(
     modifier: Modifier = Modifier,
     course: RouteInfo,
-    onSelectCourse: (Int) -> Unit,
-    onStartRide: (Int) -> Unit
+    onStartRide: () -> Unit
 ) {
     Card(
         modifier = modifier,
@@ -74,8 +74,7 @@ fun CourseCardView(
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = HelpmetTheme.colors.black1),
                 onClick = {
-                    onSelectCourse(course.routeId)
-                    onStartRide(course.routeId)
+                    onStartRide()
                 }
             ) {
                 Text(

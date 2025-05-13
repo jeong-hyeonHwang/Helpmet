@@ -18,7 +18,7 @@ fun CourseCardPager(
     modifier: Modifier,
     courses: List<RouteInfo>,
     onSelectCourse: (Int) -> Unit,
-    onStartRide: (Int) -> Unit
+    onStartRide: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { courses.size })
 
@@ -58,7 +58,6 @@ fun CourseCardPager(
                         this.alpha = alpha
                     },
                 course = courses[page],
-                onSelectCourse = onSelectCourse,
                 onStartRide = onStartRide
             )
         }

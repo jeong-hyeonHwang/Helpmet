@@ -11,25 +11,24 @@ import androidx.compose.foundation.layout.padding
 import android.content.Context
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
-import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.presentation.feature.preride.component.CourseCardPager
 import com.a303.helpmet.presentation.feature.preride.component.CourseInfoBubbleView
 import com.a303.helpmet.presentation.feature.preride.component.LocationCircleButton
 import com.a303.helpmet.presentation.feature.preride.component.NoiseCancelingWarningDialog
+import com.a303.helpmet.util.cache.RouteCache
 
 @Composable
 fun PreRideScreen(
     preRideViewModel: PreRideViewModel = remember {
         PreRideViewModel(FakeNavigationService())
     },
-    onStartRide: (Int) -> Unit
+    onStartRide: () -> Unit
 ) {
     // 1) ViewModel 상태 구독
     val routeOptions by preRideViewModel.routeOptions.collectAsState()
@@ -64,16 +63,18 @@ fun PreRideScreen(
             selectedCourseId = courseId
             showDialog = true
         } else {
-            onStartRide(courseId)
+            onStartRide()
         }
     }
+
     if (showDialog && selectedCourseId != null) {
         NoiseCancelingWarningDialog(
             onDismiss = { showDialog = false },
             onConfirm = {
-                selectedCourseId?.let {
+                selectedCourseId?.let { courseId ->
                     showDialog = false
-                    onStartRide(it)
+                    onStartRideClicked(courseId)
+                    onStartRide()
                 }
             }
         )
@@ -134,7 +135,10 @@ fun PreRideScreen(
                         .align(Alignment.CenterHorizontally),
                     courses = routeInfoList,
                     onSelectCourse = { idx -> preRideViewModel.onCourseSelected(idx) },
-                    onStartRide = onStartRide
+                    onStartRide = {
+                        RouteCache.set(routeOptions[selectedIndex], routeInfoList[selectedIndex])
+                        onStartRide()
+                    }
                 )
             }
         }
