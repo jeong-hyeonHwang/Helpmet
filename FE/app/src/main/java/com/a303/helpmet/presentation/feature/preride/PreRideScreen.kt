@@ -136,7 +136,7 @@ fun PreRideScreen(
                     courses = routeInfoList,
                     onSelectCourse = { idx -> preRideViewModel.onCourseSelected(idx) },
                     onStartRide = {
-                        RouteCache.set(routeOptions[selectedIndex])
+                        RouteCache.set(routeOptions[selectedIndex], routeInfoList[selectedIndex])
                         onStartRide()
                     }
                 )

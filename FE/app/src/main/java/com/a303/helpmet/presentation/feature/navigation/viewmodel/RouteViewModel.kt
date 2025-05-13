@@ -1,8 +1,8 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.a303.helpmet.presentation.model.RouteInfo
 import com.a303.helpmet.util.RouteProgressCalculator
 import com.a303.helpmet.util.cache.RouteCache
 import com.kakao.vectormap.LatLng
@@ -19,6 +19,9 @@ class RouteViewModel : ViewModel() {
     private val _routeLineOptions = MutableStateFlow<RouteLineOptions?>(null)
     val routeLineOptions: StateFlow<RouteLineOptions?> get() = _routeLineOptions
 
+    private val _routeInfo = MutableStateFlow<RouteInfo?>(null)
+    val routeInfo: StateFlow<RouteInfo?> get() = _routeInfo
+
     // 스냅된 사용자 위치 (진행률에 가장 가까운 점)
     private val _snappedPosition = MutableStateFlow<LatLng?>(null)
     val snappedPosition: StateFlow<LatLng?> get() = _snappedPosition
@@ -28,8 +31,12 @@ class RouteViewModel : ViewModel() {
 
     // 캐시된 경로 불러오기
     fun loadFromCache() {
-        RouteCache.get()?.let {
+        RouteCache.getRoute()?.let {
             _routeLineOptions.value = it
+        }
+
+        RouteCache.getRouteInfo()?.let {
+            _routeInfo.value = it
         }
     }
 
@@ -40,7 +47,6 @@ class RouteViewModel : ViewModel() {
 
     // 외부에서 직접 진행률 업데이트
     fun updateProgress(progress: Float) {
-        Log.d("RouteViewModel", "updateProgress: $progress")
         routeLine?.progressTo(progress, 0)
     }
 
@@ -56,7 +62,7 @@ class RouteViewModel : ViewModel() {
         }
     }
 
-    // 테스트용 사용자 이동 시뮬레이션
+    // TEST: 테스트용 사용자 이동 시뮬레이션
     fun simulateMovementWithProgressUpdate(
         path: List<LatLng>,
         interval: Long = 1000L,

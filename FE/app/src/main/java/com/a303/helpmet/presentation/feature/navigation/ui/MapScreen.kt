@@ -1,8 +1,6 @@
-// MapScreen.kt
 package com.a303.helpmet.presentation.feature.navigation.ui
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -35,7 +33,7 @@ fun MapScreen(
     followUser: Boolean,
     onFollowHandled: () -> Unit,
     defaultZoom: Int = 17,
-    routeViewModel: RouteViewModel = viewModel(),
+    routeViewModel: RouteViewModel,
     userPositionViewModel: UserPositionViewModel = viewModel(),
     updateMapShapes: UpdateMapShapesUseCase = UpdateMapShapesUseCase()
 ) {
@@ -107,13 +105,9 @@ fun MapScreen(
 
                 start(
                     object : MapLifeCycleCallback() {
-                        override fun onMapDestroy() {
-                            TODO("Not yet implemented")
-                        }
+                        override fun onMapDestroy() { }
 
-                        override fun onMapError(p0: Exception?) {
-                            TODO("Not yet implemented")
-                        }
+                        override fun onMapError(p0: Exception?) { }
                     },
                     object : KakaoMapReadyCallback() {
                         override fun onMapReady(map: KakaoMap) {
