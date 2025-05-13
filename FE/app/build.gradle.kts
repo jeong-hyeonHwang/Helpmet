@@ -16,6 +16,7 @@ val localProps = Properties().apply {
     }
 }
 val kakaoKey: String = localProps.getProperty("kakao.map.api.key") ?: ""
+val helpmetPW: String = localProps.getProperty("helpmet_password") ?: ""
 
 android {
     namespace = "com.a303.helpmet"
@@ -34,6 +35,12 @@ android {
             "String",
             "KAKAO_MAPS_API_KEY",
             "\"${kakaoKey}\""
+        )
+
+        buildConfigField(
+            "String",
+            "HELPMET_PASSWORD",
+            "\"${helpmetPW}\""
         )
     }
 
