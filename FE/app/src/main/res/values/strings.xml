@@ -16,9 +16,9 @@
     <string name="dialog_searching_helmet">헬멧을 찾는 중입니다...</string>
     <string name="dialog_connecting_helmet">헬멧과 연결 중입니다...</string>
     <string name="dialog_connecting_error_helmet">연결에 실패했습니다. 잠시 후 다시 시도해주세요.</string>
-    <string name="dialog_diconnecting_helmet">헬멧 연결을 해제하는 중입니다...</string>
+    <string name="dialog_disconnecting_helmet">헬멧 연결을 해제하는 중입니다...</string>
     <string name="dialog_disconnect_helmet">성공적으로 헬멧 연결을 해제했습니다.</string>
-    <string name="dialog_diconnecting_error_helmet">연결 해제 중 오류가 발생했습니다.</string>
+    <string name="dialog_disconnecting_error_helmet">연결 해제 중 오류가 발생했습니다.</string>
 
     <!-- 코스 추천 -->
     <string name="recommend_course_hangang">한강 주행 코스 추천</string>
