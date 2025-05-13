@@ -41,7 +41,11 @@ import com.a303.helpmet.data.ml.analysis.ApproachAnalyzer
 import com.a303.helpmet.data.network.WebSocketFrameReceiver
 import com.a303.helpmet.data.ml.detector.YoloV5TFLiteDetector
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 
 @Composable
@@ -62,10 +66,15 @@ fun NavigationScreen(
             Log.e("Detector", "모델 로딩 실패", e)
             null
         }
+        finally {
+            Log.d("Websocket", "모델 종료")
+        }
     }
     val analyzer = remember { ApproachAnalyzer() }
     val coroutineScope = rememberCoroutineScope()
     var lastProcessedTime by remember { mutableStateOf(0L) }
+    val latestBitmap = remember { mutableStateOf<Bitmap?>(null) }
+    val isProcessing = remember { mutableStateOf(false) }
 
 
     // 권한 상태 관리
@@ -92,37 +101,47 @@ fun NavigationScreen(
 
     // 최초 실행 시 권한 요청
     LaunchedEffect(Unit) {
-        Log.d("Danger", "🚨")
-
         receiver.connect("ws://192.168.4.1:8080/ws") { bitmap ->
-            val now = System.currentTimeMillis()
-            if (now - lastProcessedTime > 200) { // 5FPS 이하로 제한
-                lastProcessedTime = now
-                coroutineScope.launch(Dispatchers.Default) {
+            latestBitmap.value = bitmap // 프레임은 덮어쓰기만 함 (이전 건 덮임)
+        }
+
+        while (true) {
+            if (!isProcessing.value && latestBitmap.value != null) {
+                val currentBitmap = latestBitmap.value
+                latestBitmap.value = null // 현재 프레임만 처리, 이후 건 버림
+                isProcessing.value = true
+
+                launch(Dispatchers.Default) {
                     try {
                         detector?.let { safeDetector ->
-                            val results = safeDetector.detect(bitmap)
+                            val results = safeDetector.detect(currentBitmap!!)
+                            Log.d("Websocket", "객체 감지")
+
                             results.forEachIndexed { index, result ->
                                 val isDangerous = analyzer.addDetection(index, result.rect)
                                 if (isDangerous) {
-                                    Log.d("Danger", "🚨 위험 감지! class=${result.classId}, conf=${result.score}")
+                                    Log.d("Websocket", "🚨 위험 감지! class=${result.classId}, conf=${result.score}")
+                                    val jsonObject: JsonObject = buildJsonObject {
+                                        put("type", "CAR_DETECTED")
+                                        put("message", "자동차가 감지되었습니다.")
+                                    }
+                                    receiver.send(jsonObject)
                                 }
                             }
-                        } ?: Log.e("Detector", "detector is null — 모델 로딩 실패")
+                        }
                     } catch (e: Exception) {
                         Log.e("Detector", "detect() 중 예외 발생", e)
+                    } finally {
+                        isProcessing.value = false
                     }
                 }
             }
-        }
 
-
-        if (!hasRecordPermission) {
-            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        } else {
-            voiceViewModel.startListening()
+            delay(50L) // 너무 자주 체크하지 않도록 약간의 간격
         }
     }
+
+
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
