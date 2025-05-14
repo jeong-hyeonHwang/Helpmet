@@ -1,8 +1,8 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
+import DeviceProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.a303.helpmet.data.network.RetrofitProvider
 import com.a303.helpmet.data.repository.DeviceRepository
 import com.a303.helpmet.data.repository.DirectionSocketRepository
 import com.a303.helpmet.data.service.DeviceService
@@ -56,7 +56,11 @@ class NavigationViewModel(
 
     fun validateDevice(baseUrl: String) {
         viewModelScope.launch {
-            _isValidPi.value = deviceRepository.isHelpmetDevice()
+            val retrofit = DeviceProvider.create(baseUrl)
+            val service = retrofit.create(DeviceService::class.java)
+            val repository = DeviceRepository(service)
+
+            _isValidPi.value = repository.isHelpmetDevice()
         }
     }
 

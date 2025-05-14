@@ -3,12 +3,12 @@ package com.a303.helpmet.presentation.feature.navigation.component
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.wifi.WifiManager
-import android.util.Log
-import android.webkit.PermissionRequest
+import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun StreamingView(
-    viewModel :NavigationViewModel = koinViewModel()
+    viewModel: NavigationViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -52,6 +53,7 @@ fun StreamingView(
         modifier = Modifier
             .fillMaxWidth()
             .height(streamingViewHeight)
+            .background(Color.Red)
     ) {
         when (isValidPi) {
             null -> {
@@ -73,16 +75,17 @@ fun StreamingView(
 fun WebRTCPage(url: String) {
     AndroidView(
         factory = { context ->
-            WebView(context).apply {
+            val webView = WebView(context).apply {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 settings.allowFileAccess = true
                 settings.mediaPlaybackRequiresUserGesture = false
+                settings.javaScriptCanOpenWindowsAutomatically = true
                 settings.cacheMode = WebSettings.LOAD_NO_CACHE
 
                 webChromeClient = object : WebChromeClient() {
-                    override fun onPermissionRequest(request: PermissionRequest?) {
-                        request?.grant(request.resources)
+                    override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
+                        return true
                     }
                 }
 
@@ -94,21 +97,21 @@ fun WebRTCPage(url: String) {
                         failingUrl: String?
                     ) {
                         super.onReceivedError(view, errorCode, description, failingUrl)
-                        Log.e("WebView", "Error $errorCode: $description ($failingUrl)")
                     }
                 }
-
                 loadUrl(url)
             }
+
+            webView
         },
         modifier = Modifier.fillMaxSize(),
         onRelease = { webView ->
             webView.stopLoading()
             webView.loadUrl("about:blank")
             webView.clearHistory()
+            webView.clearCache(true)
             webView.removeAllViews()
             webView.destroy()
-            Log.d("WebView", "WebView destroyed cleanly")
         }
     )
 }

@@ -15,9 +15,9 @@ import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.presentation.feature.preride.RideTimeSetScreen
 import com.a303.helpmet.presentation.feature.voiceguide.VoiceGuideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
-import com.a303.helpmet.framwork.notification.NotificationChannelManager
-import com.a303.helpmet.framwork.usage.service.AppUsageService
-import com.a303.helpmet.framwork.usage.util.UsageAccessManager
+import com.a303.helpmet.framework.notification.NotificationChannelManager
+import com.a303.helpmet.framework.usage.service.AppUsageService
+import com.a303.helpmet.framework.usage.util.UsageAccessManager
 import com.kakao.sdk.common.util.Utility.getKeyHash
 
 // MainActivity.kt
