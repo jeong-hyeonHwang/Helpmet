@@ -70,7 +70,7 @@ fun HelmetInfoView(
             LoadingDialog(viewModel, stringResource(R.string.dialog_connecting_helmet))
         }
         HelmetConnectionState.Disconnecting -> {
-            LoadingDialog(viewModel, stringResource(R.string.dialog_diconnecting_helmet))
+            LoadingDialog(viewModel, stringResource(R.string.dialog_disconnecting_helmet))
         }
         HelmetConnectionState.Success,
         HelmetConnectionState.Idle -> Unit

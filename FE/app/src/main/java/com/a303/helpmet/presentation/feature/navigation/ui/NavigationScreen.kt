@@ -72,7 +72,15 @@ fun NavigationScreen(
         } else {
             voiceViewModel.startListening()
         }
+        navigationViewModel.connectToDirectionSocket()
     }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            navigationViewModel.disconnectFromDirectionSocket()
+        }
+    }
+
     val isActiveStreamingView by navigationViewModel.isActiveStreamingView.collectAsState()
 
     // 2) 내 위치 자동 추적 플래그

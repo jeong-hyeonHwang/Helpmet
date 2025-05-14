@@ -106,7 +106,7 @@ class HelmetCheckViewModel : ViewModel() {
             }
         } catch (e: Exception) {
             viewModelScope.launch {
-                Toast.makeText(context, context.getString(R.string.dialog_diconnecting_error_helmet), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.dialog_disconnecting_error_helmet), Toast.LENGTH_SHORT).show()
                 _connectionState.value = HelmetConnectionState.Idle
             }
         }

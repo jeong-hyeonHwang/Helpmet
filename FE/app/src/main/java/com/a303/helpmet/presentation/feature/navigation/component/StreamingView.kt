@@ -24,8 +24,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.a303.helpmet.BuildConfig
+import com.a303.helpmet.data.repository.DeviceRepository
+import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.a303.helpmet.util.handler.getGatewayIp
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -37,7 +41,7 @@ fun StreamingView(
     val streamingViewHeight = screenWidth * 3 / 4
 
     val gatewayIp = getGatewayIp(context)
-    val webPageUrl = "http://$gatewayIp:8080/"
+    val webPageUrl = "http://$gatewayIp:${BuildConfig.SOCKET_PORT}/"
 
     val isValidPi by viewModel.isValidPi.collectAsState()
 
@@ -109,20 +113,5 @@ fun WebRTCPage(url: String) {
             webView.removeAllViews()
             webView.destroy()
         }
-    )
-}
-
-
-@SuppressLint("DefaultLocale")
-fun getGatewayIp(context: Context): String? {
-    val wifiManager = context.applicationContext.getSystemService(WifiManager::class.java)
-    val dhcpInfo = wifiManager.dhcpInfo
-    val ip = dhcpInfo.gateway
-    return String.format(
-        "%d.%d.%d.%d",
-        (ip and 0xff),
-        (ip shr 8 and 0xff),
-        (ip shr 16 and 0xff),
-        (ip shr 24 and 0xff)
     )
 }
