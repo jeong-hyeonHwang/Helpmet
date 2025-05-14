@@ -7,7 +7,9 @@ import org.koin.dsl.module
 
 val navigationModule = module {
     viewModel { NavigationViewModel(
-        deviceRepository = get()
+        deviceRepository = get(),
+        directionSocketRepository = get()
     ) }
     viewModel { MapViewModel() }
+
 }

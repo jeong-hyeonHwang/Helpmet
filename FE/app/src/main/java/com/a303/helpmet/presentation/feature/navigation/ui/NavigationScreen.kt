@@ -70,7 +70,15 @@ fun NavigationScreen(
         } else {
             voiceViewModel.startListening()
         }
+        viewModel.connectToDirectionSocket()
     }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.disconnectFromDirectionSocket()
+        }
+    }
+
     val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {

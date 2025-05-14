@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.network.RetrofitProvider
 import com.a303.helpmet.data.repository.DeviceRepository
+import com.a303.helpmet.data.repository.DirectionSocketRepository
 import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.model.StreamingNoticeState
@@ -15,7 +16,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class NavigationViewModel(
-    private val deviceRepository: DeviceRepository
+    private val deviceRepository: DeviceRepository,
+    private val directionSocketRepository: DirectionSocketRepository
 ) : ViewModel()  {
     private val _isActiveStreamingView = MutableStateFlow(true)
     val isActiveStreamingView: StateFlow<Boolean> = _isActiveStreamingView
@@ -26,6 +28,7 @@ class NavigationViewModel(
     val directionState: StateFlow<DirectionState> = DirectionStateManager.directionState
 
     private var noticeResetJob: Job? = null
+    private var isSocketConnected = false
 
     // 토글 함수
     fun toggleStreaming() {
@@ -54,6 +57,21 @@ class NavigationViewModel(
     fun validateDevice(baseUrl: String) {
         viewModelScope.launch {
             _isValidPi.value = deviceRepository.isHelpmetDevice()
+        }
+    }
+
+    fun connectToDirectionSocket() {
+        if (!isSocketConnected){
+            directionSocketRepository.connect()
+            isSocketConnected = true
+        }
+
+    }
+
+    fun disconnectFromDirectionSocket() {
+        if (isSocketConnected) {
+            directionSocketRepository.disconnect()
+            isSocketConnected = false
         }
     }
 }

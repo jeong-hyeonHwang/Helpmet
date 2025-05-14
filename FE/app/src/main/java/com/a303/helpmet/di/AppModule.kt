@@ -8,5 +8,6 @@ val appModule = listOf(
     rideTimeSetModule,
     navigationModule,
     voiceGuideModule,
-    voiceInteractionModule
+    voiceInteractionModule,
+    webSocketModule
 )
