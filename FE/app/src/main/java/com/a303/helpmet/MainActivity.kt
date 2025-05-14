@@ -1,7 +1,9 @@
 package com.a303.helpmet
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -33,6 +35,12 @@ class MainActivity : ComponentActivity() {
         Log.d("HASH", keyHash)
 
         NotificationChannelManager.setupNotificationChannels(this)
+
+        // 알림 접근 권한이 없다면 설정 화면으로 이동
+        if (!isNotificationListenerEnabled()) {
+            Toast.makeText(this, "반납시간 안내를 위해 앱의 알림 접근 권한이 필요합니다", Toast.LENGTH_SHORT).show()
+            startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
+        }
 
         if (!UsageAccessManager.hasUsageAccess(this)) {
             UsageAccessManager.showPermissionDialog(this) {
@@ -124,4 +132,10 @@ class MainActivity : ComponentActivity() {
 
 
 
+}
+
+fun Context.isNotificationListenerEnabled(): Boolean {
+    val pkgName = packageName
+    val flat = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+    return flat?.contains(pkgName) == true
 }
