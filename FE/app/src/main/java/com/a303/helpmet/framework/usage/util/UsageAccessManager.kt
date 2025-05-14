@@ -1,13 +1,11 @@
-package com.a303.helpmet.framwork.usage.util
+package com.a303.helpmet.framework.usage.util
 
 import android.app.AlertDialog
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.ui.res.stringResource
 import com.a303.helpmet.R
-import androidx.compose.ui.res.stringResource
 
 
 object UsageAccessManager {
