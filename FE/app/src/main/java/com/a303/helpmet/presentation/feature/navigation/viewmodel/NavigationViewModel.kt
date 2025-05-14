@@ -1,8 +1,8 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
+import DeviceProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.a303.helpmet.data.network.RetrofitProvider
 import com.a303.helpmet.data.repository.DeviceRepository
 import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.domain.model.DirectionState
@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class NavigationViewModel(
-    private val deviceRepository: DeviceRepository
-) : ViewModel()  {
+class NavigationViewModel() : ViewModel()  {
     private val _isActiveStreamingView = MutableStateFlow(true)
     val isActiveStreamingView: StateFlow<Boolean> = _isActiveStreamingView
 
@@ -53,7 +51,11 @@ class NavigationViewModel(
 
     fun validateDevice(baseUrl: String) {
         viewModelScope.launch {
-            _isValidPi.value = deviceRepository.isHelpmetDevice()
+            val retrofit = DeviceProvider.create(baseUrl)
+            val service = retrofit.create(DeviceService::class.java)
+            val repository = DeviceRepository(service)
+
+            _isValidPi.value = repository.isHelpmetDevice()
         }
     }
 }
