@@ -7,12 +7,15 @@ from crud.bike_station import fetch_closest_bike_station
 from services.route_util import nearest_nodes, route_nodes
 from models.route_response import RouteSegment, Instruction, Coordinate, RouteResponseDto
 
+EXTRA_MINUTES : int = 10
+
 def find_bike_route(from_lat:float, from_lon:float, limit_minutes:int, G):
     source = ox.distance.nearest_nodes(G, X=from_lon, Y=from_lat)
+    print(source)
 
     # 제한 시간 내 도달 가능한 노드 탐색
     travel_times = single_source_dijkstra_path_length(G, source, weight="travel_time")
-    reachable_nodes = [n for n, t in travel_times.items() if t <= limit_minutes]
+    reachable_nodes = [n for n, t in travel_times.items() if t <= limit_minutes - EXTRA_MINUTES]
 
     if not reachable_nodes:
         raise HTTPException(status_code=404, detail="시간 내 도달 가능한 자전거도로가 없습니다.")
