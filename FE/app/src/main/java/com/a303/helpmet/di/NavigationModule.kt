@@ -9,5 +9,4 @@ val navigationModule = module {
         deviceRepository = get(),
         directionSocketRepository = get()
     ) }
-    viewModel { MapViewModel() }
 }
