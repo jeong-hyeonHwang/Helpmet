@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,18 +32,22 @@ import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.StreamingNoticeState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
 import com.a303.helpmet.util.postPosition.appendSubjectPostposition
 import org.koin.androidx.compose.koinViewModel
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 @Composable
 fun StreamingNoticeView(
     onFinish: () -> Unit,
-    viewModel: NavigationViewModel = koinViewModel()
+    navigationViewModel: NavigationViewModel,
+    routeViewModel: RouteViewModel
 ) {
-    val noticeState by viewModel.noticeState.collectAsState()
+    val noticeState by navigationViewModel.noticeState.collectAsState()
 
     Box(
         modifier = Modifier
@@ -64,7 +69,7 @@ fun StreamingNoticeView(
 
 
         when (noticeState) {
-            StreamingNoticeState.Default -> DefaultNotice()
+            StreamingNoticeState.Default -> DefaultNotice(routeViewModel)
             StreamingNoticeState.Caution -> CautionNotice()
             StreamingNoticeState.Danger -> DangerNotice()
         }
@@ -74,7 +79,20 @@ fun StreamingNoticeView(
 }
 
 @Composable
-fun DefaultNotice() {
+fun DefaultNotice(
+    routeViewModel: RouteViewModel
+) {
+
+    val routeInfo by routeViewModel.routeInfo.collectAsState()
+    val durationMin = routeInfo?.duration
+
+    val estimatedArrivalTime = remember(durationMin) {
+        val now = LocalDateTime.now()
+        val arrival = durationMin?.toLong()?.let { now.plusMinutes(it) }
+        val formatter = DateTimeFormatter.ofPattern("HH시 mm분")
+        arrival?.format(formatter) ?: now.format(formatter)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -96,7 +114,7 @@ fun DefaultNotice() {
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            Text(text="주소")
+            routeInfo?.endLocationName?.let { Text(text= it) }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -106,11 +124,14 @@ fun DefaultNotice() {
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ){
-            Text(text="도착시간")
+            Text(text= estimatedArrivalTime)
 
             Spacer(modifier = Modifier.width(50.dp))
 
-            Text(text="남은 거리")
+            routeInfo?.distanceKm?.let {
+                Text(text= stringResource(R.string.course_distance, it))
+            }
+
         }
     }
 

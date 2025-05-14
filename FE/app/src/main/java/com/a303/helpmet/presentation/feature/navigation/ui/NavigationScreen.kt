@@ -31,12 +31,14 @@ import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationView
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 
 @Composable
 fun NavigationScreen(
     onFinish: () -> Unit,
-    viewModel: NavigationViewModel = koinViewModel()
+    navigationViewModel: NavigationViewModel = koinViewModel(),
+    routeViewModel: RouteViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val voiceViewModel: VoiceInteractViewModel = koinViewModel()
@@ -70,16 +72,19 @@ fun NavigationScreen(
         } else {
             voiceViewModel.startListening()
         }
-        viewModel.connectToDirectionSocket()
+        navigationViewModel.connectToDirectionSocket()
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.disconnectFromDirectionSocket()
+            navigationViewModel.disconnectFromDirectionSocket()
         }
     }
 
-    val isActiveStreamingView by viewModel.isActiveStreamingView.collectAsState()
+    val isActiveStreamingView by navigationViewModel.isActiveStreamingView.collectAsState()
+
+    // 2) 내 위치 자동 추적 플래그
+    var followUser by remember { mutableStateOf(true) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (isActiveStreamingView) {
@@ -91,7 +96,7 @@ fun NavigationScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
-                .clickable { viewModel.toggleStreaming() },
+                .clickable { navigationViewModel.toggleStreaming() },
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -110,7 +115,9 @@ fun NavigationScreen(
                 .weight(1f)
         ) {
             MapScreen(
-                defaultZoom = 15
+                followUser = followUser,
+                onFollowHandled = { followUser = false },
+                routeViewModel = routeViewModel
             )
             Box(
                 modifier = Modifier
@@ -123,7 +130,11 @@ fun NavigationScreen(
         }
 
         // 안내 멘트
-        StreamingNoticeView(onFinish)
+        StreamingNoticeView(
+            onFinish,
+            navigationViewModel = navigationViewModel,
+            routeViewModel = routeViewModel
+        )
 
     }
 }

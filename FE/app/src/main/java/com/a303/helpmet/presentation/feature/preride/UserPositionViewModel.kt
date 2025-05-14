@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class RoutePreviewViewModel : ViewModel() {
+class UserPositionViewModel : ViewModel() {
     private val _position = MutableStateFlow<LatLng>(LatLng.from(37.394660,127.111182))
     val position: StateFlow<LatLng> = _position.asStateFlow()
 
@@ -48,6 +48,8 @@ class RoutePreviewViewModel : ViewModel() {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let {
                     val pos = LatLng.from(it.latitude, it.longitude)
+
+                    // TEST 시 !주석 처리!
                     _position.value = pos
                     onUpdate(pos, _heading.value)
                 }
@@ -89,4 +91,10 @@ class RoutePreviewViewModel : ViewModel() {
         // 위치·센서 해제 로직
         super.onCleared()
     }
+
+    // TEST
+    fun setMockPosition(position: LatLng) {
+        _position.value = position
+    }
+
 }
