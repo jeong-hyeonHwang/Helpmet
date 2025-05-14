@@ -90,10 +90,13 @@ def build_response_from_route(G , route) -> RouteResponseDto:
     bounds = [0] + turn_idx + [len(coords) - 1]
     linear_instr = _linear_instructions(G, route, coords, bounds)
 
-    instructions = sorted(linear_instr + turn_instr, key=lambda x: x.index)
+    def instruction_priority(instr):
+        return (instr.index, 0 if instr.action in ("좌회전", "우회전") else 1)
 
-    start_addr : str = get_nearest_poi(G.nodes[route[0]]["y"], G.nodes[route[0]]["x"])
-    end_addr :str = get_nearest_poi(G.nodes[route[0]]["y"], G.nodes[route[-1]]["x"])
+    instructions = sorted(linear_instr + turn_instr, key=instruction_priority)
+
+    start_addr : str = get_nearest_poi(lat=G.nodes[route[0]]["y"], lon=G.nodes[route[0]]["x"])
+    end_addr :str = get_nearest_poi(lat=G.nodes[route[0]]["y"], lon=G.nodes[route[-1]]["x"])
 
     return RouteResponseDto(
         start_addr=start_addr,

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from typing import List
 
 
@@ -8,15 +8,10 @@ class Coordinate(BaseModel):
 
 
 class RouteSegment(BaseModel):
-    from_: Coordinate  # 'from'은 예약어라서 변수명을 'from_'으로 변경
+    from_: Coordinate
     to: Coordinate
     is_cycleway: bool
     distance_m: float
-
-    class Config:
-        fields = {
-            'from_': 'from'  # 실제 JSON 키는 'from'
-        }
 
 
 class Instruction(BaseModel):
