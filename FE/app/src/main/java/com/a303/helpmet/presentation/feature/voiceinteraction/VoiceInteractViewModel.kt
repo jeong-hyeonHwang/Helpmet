@@ -3,6 +3,7 @@ package com.a303.helpmet.presentation.feature.voiceinteraction
 import android.app.Application
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.R
@@ -54,8 +55,7 @@ class VoiceInteractViewModel(
 
     init {
         voiceHandler.updateRecognitionCallback { text -> handleVoiceInput(text) }
-        voiceHandler.startListening()
-
+        Log.d("VoiceHandler", "생성됨")
         viewModelScope.launch {
             while (!_isVoiceReady.value) {
                 if (voiceHandler.isTtsReady) {
@@ -65,6 +65,11 @@ class VoiceInteractViewModel(
                 delay(50)
             }
         }
+    }
+
+    fun onReturnAlertReceived(){
+        promptContext = VoicePromptContext.Parking
+        speak(context.getString(R.string.voice_return_alarm_message))
     }
 
     private fun handleVoiceInput(text: String) {
@@ -137,11 +142,17 @@ class VoiceInteractViewModel(
     }
 
     fun speak(text: String) {
-        voiceHandler.speak(text)
+        voiceHandler.speak(text) {
+            voiceHandler.startListening() // TTS 끝나고 나면 STT 시작
+        }
     }
 
     fun startListening() {
         voiceHandler.startListening()
+    }
+
+    fun stopListening(){
+        voiceHandler.destroy()
     }
 
     fun notifyPermissionMissing() {

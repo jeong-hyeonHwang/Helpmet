@@ -2,6 +2,8 @@ package com.a303.helpmet.presentation.feature.navigation.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -26,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
@@ -35,6 +38,7 @@ import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
+import com.a303.helpmet.util.cache.RouteCache
 
 @Composable
 fun NavigationScreen(
@@ -42,7 +46,8 @@ fun NavigationScreen(
     navigationViewModel: NavigationViewModel = koinViewModel(),
     userPositionViewModel: UserPositionViewModel = viewModel(),
     routeViewModel: RouteViewModel = koinViewModel(),
-    voiceViewModel: VoiceInteractViewModel = koinViewModel()
+    voiceViewModel: VoiceInteractViewModel,
+    navController: NavController
 ) {
     val context = LocalContext.current
 
@@ -81,7 +86,15 @@ fun NavigationScreen(
     DisposableEffect(Unit) {
         onDispose {
             navigationViewModel.disconnectFromDirectionSocket()
+            RouteCache.clear()
+            voiceViewModel.stopListening()
         }
+    }
+
+    BackHandler {
+//        Log.d("VoiceHandler", "뒤로감")
+        voiceViewModel.stopListening() // 강제로 STT/TTS 종료
+        navController.popBackStack()
     }
 
     val isActiveStreamingView by navigationViewModel.isActiveStreamingView.collectAsState()

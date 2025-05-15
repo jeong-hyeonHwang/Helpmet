@@ -101,6 +101,7 @@
     <string name="voice_prompt_restroom">가장 가까운 화장실로 안내할까요?</string>
     <string name="voice_prompt_rental">가장 가까운 대여소로 안내할까요?</string>
     <string name="voice_restart_failed">음성 인식을 시작할 수 없어요. 설정에서 마이크 권한을 확인해주세요.</string>
+    <string name="voice_return_alarm_message">따릉이 반납 시간이 10분 남았습니다. 가장 가까운 대여소로 안내할까요?</string>
 
 
     <!-- 접근 권한 -->
@@ -109,6 +110,12 @@
     <string name="permission_button_setting">설정으로 이동</string>
     <string name="permission_button_cancel">취소</string>
     <string name="permission_complete">권한 설정이 완료되었습니다!</string>
+
+    <!-- 알림 접근 권한 -->
+    <string name="noti_permission_title">알림 권한 요청</string>
+    <string name="noti_permission_content">따릉이 반납 시간이 다가오면\n가장 가까운 따릉이 대여소를 안내해드려요!🚲 \n\n이 기능을 사용하기 위해서는 알림 접근 허용이 필요합니다.\n이 기능을 사용하시겠어요?</string>
+    <string name="noti_permission_button_setting">네, 사용할래요</string>
+    <string name="noti_permission_button_cancel">괜찮아요</string>
 
     <!-- 헬프멧 알림 -->
     <string name="helpmet_alert_title">따릉이를 이용하시나요?</string>
