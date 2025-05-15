@@ -4,7 +4,7 @@ import DeviceProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.repository.DeviceRepository
-import com.a303.helpmet.data.repository.DirectionSocketRepository
+import com.a303.helpmet.data.repository.WebsocketRepository
 import com.a303.helpmet.data.service.DeviceService
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.model.StreamingNoticeState
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class NavigationViewModel(
     private val deviceRepository: DeviceRepository,
-    private val directionSocketRepository: DirectionSocketRepository
+    private val websocketRepository: WebsocketRepository
 ) : ViewModel()  {
     private val _isActiveStreamingView = MutableStateFlow(true)
     val isActiveStreamingView: StateFlow<Boolean> = _isActiveStreamingView
@@ -66,7 +66,7 @@ class NavigationViewModel(
 
     fun connectToDirectionSocket() {
         if (!isSocketConnected){
-            directionSocketRepository.connect()
+            websocketRepository.connect()
             isSocketConnected = true
         }
 
@@ -74,7 +74,7 @@ class NavigationViewModel(
 
     fun disconnectFromDirectionSocket() {
         if (isSocketConnected) {
-            directionSocketRepository.disconnect()
+            websocketRepository.disconnect()
             isSocketConnected = false
         }
     }
