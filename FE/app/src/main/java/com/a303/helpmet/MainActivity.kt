@@ -1,13 +1,16 @@
 package com.a303.helpmet
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,13 +25,17 @@ import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.framework.notification.NotificationChannelManager
 import com.a303.helpmet.framework.usage.service.AppUsageService
 import com.a303.helpmet.framework.usage.util.UsageAccessManager
+import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.kakao.sdk.common.util.Utility.getKeyHash
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 // MainActivity.kt
 
 class MainActivity : ComponentActivity() {
 
     private var hasCheckedUsageAccess = false  // 설정 복귀 감지용 플래그
+    private lateinit var receiver: BroadcastReceiver
+    val voiceInteractViewModel: VoiceInteractViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,12 +44,6 @@ class MainActivity : ComponentActivity() {
         Log.d("HASH", keyHash)
 
         NotificationChannelManager.setupNotificationChannels(this)
-
-        // 알림 접근 권한이 없다면 설정 화면으로 이동
-        if (!isNotificationListenerEnabled()) {
-            Toast.makeText(this, "반납시간 안내를 위해 앱의 알림 접근 권한이 필요합니다", Toast.LENGTH_SHORT).show()
-            startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
-        }
 
         if (!UsageAccessManager.hasUsageAccess(this)) {
             UsageAccessManager.showPermissionDialog(this) {
@@ -111,11 +112,27 @@ class MainActivity : ComponentActivity() {
                             onFinish = {
                                 // 안내 종료 시 다시 1번(helmet_check) 화면으로
                                 navController.popBackStack("helmet_check", inclusive = false)
-                            }
+                            },
+                            voiceViewModel = voiceInteractViewModel,
+                            navController = navController
                         )
                     }
                 }
             }
+        }
+
+        receiver = object : BroadcastReceiver(){
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Log.d("NotificationListener", "전달 ok")
+                voiceInteractViewModel.onReturnAlertReceived();
+            }
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            registerReceiver(receiver, IntentFilter("com.a303.helpmet.RETURN_ALERT_DETECTED"), Context.RECEIVER_NOT_EXPORTED)
+        }else {
+            @Suppress("DEPRECATION")
+            registerReceiver(receiver, IntentFilter("com.a303.helpmet.RETURN_ALERT_DETECTED"))
         }
     }
 
@@ -127,8 +144,6 @@ class MainActivity : ComponentActivity() {
             hasCheckedUsageAccess = true
 
             startAppUsageService()
-
-
         }
     }
 
@@ -136,13 +151,4 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, AppUsageService::class.java)
         startService(intent)
     }
-
-
-
-}
-
-fun Context.isNotificationListenerEnabled(): Boolean {
-    val pkgName = packageName
-    val flat = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
-    return flat?.contains(pkgName) == true
 }
