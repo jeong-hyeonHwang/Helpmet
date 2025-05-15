@@ -24,10 +24,6 @@
     <string name="dialog_connecting_map">맵을 불러오는 중입니다...</string>
     <string name="loading_recommended_courses">추천 코스를 불러오는 중이에요</string>
 
-    <!-- 맵 연결 과정 -->
-    <string name="dialog_connecting_map">맵을 불러오는 중입니다...</string>
-    <string name="loading_recommended_courses">추천 코스를 불러오는 중이에요</string>
-
     <!-- 코스 추천 -->
     <string name="recommend_course_hangang">한강 주행 코스 추천</string>
     <string name="recommend_course_with_ddareungi">따릉이와 함께 달려볼까요?</string>
