@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class UserPositionViewModel : ViewModel() {
-    private val _position = MutableStateFlow<LatLng>(LatLng.from(37.394660,127.111182))
+    private val _position = MutableStateFlow<LatLng>(LatLng.from(0.0,0.0))
     val position: StateFlow<LatLng> = _position.asStateFlow()
 
     private val _heading = MutableStateFlow(0f)
@@ -40,7 +40,7 @@ class UserPositionViewModel : ViewModel() {
         // 위치 업데이트 등록
         val client = LocationServices.getFusedLocationProviderClient(context)
         val req = LocationRequest.create().apply {
-            interval = 2000L
+            interval = 1000L
             fastestInterval = 1000L
             priority = Priority.PRIORITY_HIGH_ACCURACY
         }

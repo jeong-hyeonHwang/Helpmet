@@ -2,6 +2,7 @@ package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.a303.helpmet.presentation.model.InstructionUi
 import com.a303.helpmet.presentation.model.RouteInfo
 import com.a303.helpmet.util.RouteProgressCalculator
 import com.a303.helpmet.util.cache.RouteCache
@@ -11,6 +12,7 @@ import com.kakao.vectormap.route.RouteLineOptions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class RouteViewModel : ViewModel() {
@@ -18,6 +20,9 @@ class RouteViewModel : ViewModel() {
     // 전체 경로 데이터
     private val _routeLineOptions = MutableStateFlow<RouteLineOptions?>(null)
     val routeLineOptions: StateFlow<RouteLineOptions?> get() = _routeLineOptions
+
+    private val _instructionList = MutableStateFlow<List<InstructionUi>?>(null)
+    val instructionList: StateFlow<List<InstructionUi>?> get() = _instructionList
 
     private val _routeInfo = MutableStateFlow<RouteInfo?>(null)
     val routeInfo: StateFlow<RouteInfo?> get() = _routeInfo
@@ -33,6 +38,10 @@ class RouteViewModel : ViewModel() {
     fun loadFromCache() {
         RouteCache.getRoute()?.let {
             _routeLineOptions.value = it
+        }
+
+        RouteCache.getInstructionList()?.let {
+            _instructionList.value = it
         }
 
         RouteCache.getRouteInfo()?.let {
@@ -65,7 +74,7 @@ class RouteViewModel : ViewModel() {
     // TEST: 테스트용 사용자 이동 시뮬레이션
     fun simulateMovementWithProgressUpdate(
         path: List<LatLng>,
-        interval: Long = 1000L,
+        interval: Long = 2000L,
         onPositionUpdate: (LatLng) -> Unit
     ) {
         viewModelScope.launch {
@@ -80,4 +89,13 @@ class RouteViewModel : ViewModel() {
             }
         }
     }
+
+    fun markInstructionAsSpoken(instructionUi: InstructionUi) {
+        _instructionList.update { list ->
+            list?.map {
+                if (it.index == instructionUi.index && it.message == instructionUi.message) it.copy(isSpoken = true) else it
+            }
+        }
+    }
+
 }

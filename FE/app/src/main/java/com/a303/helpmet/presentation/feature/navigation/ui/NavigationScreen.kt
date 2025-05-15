@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
@@ -32,16 +33,18 @@ import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
+import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 
 @Composable
 fun NavigationScreen(
     onFinish: () -> Unit,
     navigationViewModel: NavigationViewModel = koinViewModel(),
-    routeViewModel: RouteViewModel = koinViewModel()
+    userPositionViewModel: UserPositionViewModel = viewModel(),
+    routeViewModel: RouteViewModel = koinViewModel(),
+    voiceViewModel: VoiceInteractViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-    val voiceViewModel: VoiceInteractViewModel = koinViewModel()
 
     // 권한 상태 관리
     var hasRecordPermission by remember {
@@ -72,7 +75,15 @@ fun NavigationScreen(
         } else {
             voiceViewModel.startListening()
         }
+        navigationViewModel.connectToDirectionSocket()
     }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            navigationViewModel.disconnectFromDirectionSocket()
+        }
+    }
+
     val isActiveStreamingView by navigationViewModel.isActiveStreamingView.collectAsState()
 
     // 2) 내 위치 자동 추적 플래그
@@ -109,7 +120,9 @@ fun NavigationScreen(
             MapScreen(
                 followUser = followUser,
                 onFollowHandled = { followUser = false },
-                routeViewModel = routeViewModel
+                routeViewModel = routeViewModel,
+                userPositionViewModel = userPositionViewModel,
+                voiceViewModel = voiceViewModel
             )
             Box(
                 modifier = Modifier

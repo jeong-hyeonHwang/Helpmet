@@ -18,8 +18,6 @@ import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import org.koin.androidx.compose.koinViewModel
 
-
-
 @Composable
 fun ConnectHelmetDialog(
     viewModel: HelmetCheckViewModel = koinViewModel(),

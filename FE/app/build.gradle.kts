@@ -17,6 +17,8 @@ val localProps = Properties().apply {
 }
 val kakaoKey: String = localProps.getProperty("kakao.map.api.key") ?: ""
 val helpmetPW: String = localProps.getProperty("helpmet_password") ?: ""
+val socketPortN: String = localProps.getProperty("socket.port") ?: ""
+val backendHost: String = localProps.getProperty("backend.api.host") ?: ""
 
 android {
     namespace = "com.a303.helpmet"
@@ -39,8 +41,20 @@ android {
 
         buildConfigField(
             "String",
+            "SOCKET_PORT",
+            "\"${socketPortN}\""
+        )
+
+        buildConfigField(
+            "String",
             "HELPMET_PASSWORD",
             "\"${helpmetPW}\""
+        )
+
+        buildConfigField(
+            "String",
+            "BACKEND_API_HOST",
+            "\"${backendHost}\""
         )
     }
 
@@ -104,4 +118,8 @@ dependencies {
     // --- Kakao ---
     implementation("com.kakao.maps.open:android:2.12.8")
     implementation("com.kakao.sdk:v2-all:2.11.0")
+
+    // --- tensorflow ---
+    implementation("org.tensorflow:tensorflow-lite:2.13.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
 }

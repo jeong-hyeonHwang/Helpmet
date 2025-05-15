@@ -29,6 +29,7 @@ fun RouteSegment.toUi() = SegmentUi(
 fun Instruction.toUi() = InstructionUi(
     index    = index,
     location = location.toUi(),
+    action = action,
     message  = message
 )
 
@@ -65,4 +66,15 @@ fun NavigationRoute.toRouteLineOptions(context: Context): RouteLineOptions {
 
     // 2) RouteLineOptions 생성
     return RouteLineOptions.from(kakaoSegments)
+}
+
+fun NavigationRoute.toInstructionList(): List<InstructionUi> {
+    return instructions.map {
+        InstructionUi(
+            index = it.index,
+            location = it.location.toUi(),
+            action = it.action,
+            message = it.message
+        )
+    }
 }

@@ -30,41 +30,47 @@ fun CourseCardPager(
             }
     }
 
-
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            pageSpacing = 8.dp,
-        ) { page ->
+        if (courses.isEmpty()) {
+            PlaceholderCourseCard()
 
-            val pageOffset = (
-                    (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-                    ).absoluteValue
+            CoursesCardPagerIndicator(
+                currentPage = pagerState.currentPage
+            )
+        } else {
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                pageSpacing = 8.dp,
+            ) { page ->
 
-            val scale = lerp(start = 0.9f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
-            val alpha = lerp(start = 0.88f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
-            CourseCardView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        this.alpha = alpha
-                    },
-                course = courses[page],
-                onStartRide = onStartRide
+                val pageOffset = (
+                        (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                        ).absoluteValue
+
+                val scale = lerp(start = 0.9f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+                val alpha = lerp(start = 0.88f, stop = 1f, fraction = 1f - pageOffset.coerceIn(0f, 1f))
+                CourseCardView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            this.alpha = alpha
+                        },
+                    course = courses[page],
+                    onStartRide = onStartRide
+                )
+            }
+
+            CoursesCardPagerIndicator(
+                pageCount = courses.size,
+                currentPage = pagerState.currentPage
             )
         }
-
-        CoursesCardPagerIndicator(
-            pageCount = courses.size,
-            currentPage = pagerState.currentPage
-        )
     }
 }

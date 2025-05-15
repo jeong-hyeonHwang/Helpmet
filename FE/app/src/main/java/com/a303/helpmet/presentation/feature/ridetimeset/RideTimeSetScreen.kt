@@ -1,5 +1,6 @@
 package com.a303.helpmet.presentation.feature.preride
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +25,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun RideTimeSetScreen(
     viewModel: RideTimeSetViewModel = koinViewModel(),
-    onRideTimeSet : () -> Unit
+    onRideTimeSet : (Int) -> Unit
 ) {
     val rideTime by viewModel.rideTime.collectAsState()
     val warning by viewModel.warning.collectAsState()
@@ -40,6 +41,7 @@ fun RideTimeSetScreen(
 
     Column(
         modifier = Modifier
+            .background(HelpmetTheme.colors.white1)
             .fillMaxSize()
             .padding(horizontal = 24.dp)
             .padding(top = 32.dp, bottom = 18.dp),
@@ -155,7 +157,7 @@ fun RideTimeSetScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = HelpmetTheme.colors.black1
             ),
-            onClick = { onRideTimeSet () }
+            onClick = { onRideTimeSet (rideTime) }
         ) {
             Text(
                 text = stringResource(R.string.start_course_recommend),

@@ -7,18 +7,24 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
+import com.a303.helpmet.domain.usecase.SendDirectionCommandUseCase
 import com.a303.helpmet.presentation.feature.voiceinteraction.sound.TickSoundManager
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.*
 import com.a303.helpmet.presentation.feature.voiceinteraction.util.UserReplyResponse
 import com.a303.helpmet.presentation.state.DirectionStateManager
 import com.a303.helpmet.presentation.model.VoiceCommand
 import com.a303.helpmet.util.handler.VoiceInteractionHandler
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class VoiceInteractViewModel(
     application: Application,
     private val navigateToRestroom: NavigateToRestroomUseCase,
     private val navigateToRental: NavigateToRentalStationUseCase,
     private val endGuide: EndGuideUseCase,
+    private val sendDirectionCommandUseCase: SendDirectionCommandUseCase
 ) : AndroidViewModel(application) {
 
     private val tickSoundManager = TickSoundManager(
@@ -29,17 +35,36 @@ class VoiceInteractViewModel(
 
     private val playTurnSignal = PlayTurnSignalSoundUseCase(
         tickSoundManager = tickSoundManager,
-//        updateDirectionState = { navigationViewModel.updateDirectionState(it) }
         updateDirectionState = { DirectionStateManager.update(it) }
+    )
+
+    private val turnOnOffSignal = TurnOnOffSignalUseCase(
+        speak = { text -> speak(text) },
+        playTurnSignal = { direction -> playTurnSignal(direction) },
+        sendCommand = { command -> sendDirectionCommandUseCase(command) }
     )
 
     private var promptContext: VoicePromptContext = VoicePromptContext.None
     private val voiceHandler = VoiceInteractionHandler(application.applicationContext)
     private val context = getApplication<Application>()
 
+    private val _isVoiceReady = MutableStateFlow(false)
+    val isVoiceReady: StateFlow<Boolean> get() = _isVoiceReady
+
+
     init {
         voiceHandler.updateRecognitionCallback { text -> handleVoiceInput(text) }
         voiceHandler.startListening()
+
+        viewModelScope.launch {
+            while (!_isVoiceReady.value) {
+                if (voiceHandler.isTtsReady) {
+                    _isVoiceReady.value = true
+                    break
+                }
+                delay(50)
+            }
+        }
     }
 
     private fun handleVoiceInput(text: String) {
@@ -73,43 +98,45 @@ class VoiceInteractViewModel(
         }
 
         // 명령 인식
-        val command = VoiceCommand.fromText(text).firstOrNull()
-        when (command) {
-            VoiceCommand.TURN_LEFT -> {
-                speak(context.getString(R.string.voice_turn_left_signal))
-                Handler(Looper.getMainLooper()).postDelayed({
-                    playTurnSignal(DirectionState.Left)
-                }, 1000)
+        val commands = VoiceCommand.fromText(text)
+        when{
+            commands.size <= 1 -> {
+                val command = commands.firstOrNull()
+                when (command) {
+                    VoiceCommand.TURN_LEFT -> {
+                        turnOnOffSignal(DirectionState.Left)
+                    }
+                    VoiceCommand.TURN_RIGHT -> {
+                        turnOnOffSignal(DirectionState.Right)
+                    }
+                    VoiceCommand.END_TURN_SIGNAL -> {
+                        turnOnOffSignal(DirectionState.None)
+                    }
+                    VoiceCommand.RESTROOM -> {
+                        promptContext = VoicePromptContext.Restroom
+                        speak(context.getString(R.string.voice_prompt_restroom))
+                    }
+                    VoiceCommand.PARKING_ZONE -> {
+                        promptContext = VoicePromptContext.Parking
+                        speak(context.getString(R.string.voice_prompt_rental))
+                    }
+                    VoiceCommand.END_GUIDE -> {
+                        promptContext = VoicePromptContext.EndGuide
+                        speak(context.getString(R.string.voice_prompt_rental))
+                    }
+                    else -> { }
+                }
             }
-            VoiceCommand.TURN_RIGHT -> {
-                speak(context.getString(R.string.voice_turn_right_signal))
-                Handler(Looper.getMainLooper()).postDelayed({
-                    playTurnSignal(DirectionState.Right)
-                }, 1000)
+            else -> {
+                val label = commands.joinToString(", ") { it.korLabel }
+                speak("${label} 중 어떤 걸 도와드릴까요?")
             }
-            VoiceCommand.END_TURN_SIGNAL -> {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    playTurnSignal(DirectionState.None)
-                }, 100)
-            }
-            VoiceCommand.RESTROOM -> {
-                promptContext = VoicePromptContext.Restroom
-                speak(context.getString(R.string.voice_prompt_restroom))
-            }
-            VoiceCommand.PARKING_ZONE -> {
-                promptContext = VoicePromptContext.Parking
-                speak(context.getString(R.string.voice_prompt_rental))
-            }
-            VoiceCommand.END_GUIDE -> {
-                promptContext = VoicePromptContext.EndGuide
-                speak(context.getString(R.string.voice_prompt_rental))
-            }
-            else -> { }
         }
+
         voiceHandler.startListening()
     }
 
-    private fun speak(text: String) {
+    fun speak(text: String) {
         voiceHandler.speak(text)
     }
 
