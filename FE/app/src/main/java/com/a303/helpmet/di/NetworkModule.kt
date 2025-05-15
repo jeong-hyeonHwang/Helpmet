@@ -23,7 +23,7 @@ val networkModule = module {
     // 로깅 인터셉터
     single {
         HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.HEADERS
         }
     }
 

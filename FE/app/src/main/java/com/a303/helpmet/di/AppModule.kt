@@ -2,7 +2,7 @@ package com.a303.helpmet.di
 
 val appModule = listOf(
     networkModule,
-    fakeNetworkModule,
+//    fakeNetworkModule,
     helmetCheckModule,
     prerideModule,
     rideTimeSetModule,

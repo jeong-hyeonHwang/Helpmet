@@ -18,6 +18,7 @@ val localProps = Properties().apply {
 val kakaoKey: String = localProps.getProperty("kakao.map.api.key") ?: ""
 val helpmetPW: String = localProps.getProperty("helpmet_password") ?: ""
 val socketPortN: String = localProps.getProperty("socket.port") ?: ""
+val backendHost: String = localProps.getProperty("backend.api.host") ?: ""
 
 android {
     namespace = "com.a303.helpmet"
@@ -48,6 +49,12 @@ android {
             "String",
             "HELPMET_PASSWORD",
             "\"${helpmetPW}\""
+        )
+
+        buildConfigField(
+            "String",
+            "BACKEND_API_HOST",
+            "\"${backendHost}\""
         )
     }
 

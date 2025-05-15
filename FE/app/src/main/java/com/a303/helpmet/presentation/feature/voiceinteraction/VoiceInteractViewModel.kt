@@ -14,6 +14,10 @@ import com.a303.helpmet.presentation.feature.voiceinteraction.util.UserReplyResp
 import com.a303.helpmet.presentation.state.DirectionStateManager
 import com.a303.helpmet.presentation.model.VoiceCommand
 import com.a303.helpmet.util.handler.VoiceInteractionHandler
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class VoiceInteractViewModel(
     application: Application,
@@ -44,9 +48,23 @@ class VoiceInteractViewModel(
     private val voiceHandler = VoiceInteractionHandler(application.applicationContext)
     private val context = getApplication<Application>()
 
+    private val _isVoiceReady = MutableStateFlow(false)
+    val isVoiceReady: StateFlow<Boolean> get() = _isVoiceReady
+
+
     init {
         voiceHandler.updateRecognitionCallback { text -> handleVoiceInput(text) }
         voiceHandler.startListening()
+
+        viewModelScope.launch {
+            while (!_isVoiceReady.value) {
+                if (voiceHandler.isTtsReady) {
+                    _isVoiceReady.value = true
+                    break
+                }
+                delay(50)
+            }
+        }
     }
 
     private fun handleVoiceInput(text: String) {
@@ -118,7 +136,7 @@ class VoiceInteractViewModel(
         voiceHandler.startListening()
     }
 
-    private fun speak(text: String) {
+    fun speak(text: String) {
         voiceHandler.speak(text)
     }
 

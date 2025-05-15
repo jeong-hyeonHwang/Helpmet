@@ -31,9 +31,13 @@ fun CourseCardView(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 코스 이름
+            val courseName = if (course.routeId == -1) {
+                stringResource(R.string.loading_recommended_courses)
+            } else {
+                stringResource(R.string.course_number, course.routeId + 1)
+            }
             Text(
-                text = stringResource(R.string.course_number, course.routeId + 1),
+                text = courseName,
                 style = HelpmetTheme.typography.subtitle,
                 color = HelpmetTheme.colors.black1
             )

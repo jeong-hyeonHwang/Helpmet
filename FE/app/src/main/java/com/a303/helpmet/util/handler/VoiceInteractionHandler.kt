@@ -20,6 +20,8 @@ class VoiceInteractionHandler(private val context: Context){
     private var speechRecognizer: SpeechRecognizer? = null
     private var recognitionCallback: ((String) -> Unit)? = null
     private var tts: TextToSpeech? = null
+    var isTtsReady = false
+        private set
 
     private var isListening = false
 
@@ -126,8 +128,10 @@ class VoiceInteractionHandler(private val context: Context){
         tts = TextToSpeech(context){status ->
             if(status == TextToSpeech.SUCCESS){
                 tts?.language = Locale.KOREAN
+                isTtsReady = true
 //                Log.d("VoiceHandler", "TTS Initialized")
             }else{
+                isTtsReady = false
 //                Log.e("VoiceHandler", "TTS Initialization Failed")
             }
         }

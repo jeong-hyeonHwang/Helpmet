@@ -6,9 +6,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.a303.helpmet.presentation.feature.helmetcheck.HelmetCheckScreen
 import com.a303.helpmet.presentation.feature.navigation.ui.NavigationScreen
 import com.a303.helpmet.presentation.feature.preride.PreRideScreen
@@ -68,9 +70,9 @@ class MainActivity : ComponentActivity() {
                     // 2-1) 코스 추천 전 주행 시간 설정 화면
                     composable("ride_time_set") {
                         RideTimeSetScreen(
-                            onRideTimeSet = {
+                            onRideTimeSet = { rideTime ->
                                 // 주행 시간 설정되면 3번 화면으로
-                                navController.navigate("pre_ride")
+                                navController.navigate("pre_ride?rideTime=${rideTime}")
                             }
                         )
                     }
@@ -81,10 +83,15 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // 3) 코스 안내 시작 전 화면
-                    composable("pre_ride") {
+                    composable(
+                        "pre_ride?rideTime={rideTime}",
+                        arguments = listOf(navArgument("rideTime") { type = NavType.IntType; defaultValue = 30 })
+                    ) { backStackEntry ->
+                        val rideTime = backStackEntry.arguments?.getInt("rideTime") ?: 30
+
                         PreRideScreen(
+                            rideTime = rideTime,
                             onStartRide = {
-                                // 준비 완료(따릉이 빌림) 시 내비게이션 화면으로
                                 navController.navigate("navigation")
                             }
                         )
