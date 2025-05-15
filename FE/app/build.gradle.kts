@@ -111,4 +111,8 @@ dependencies {
     // --- Kakao ---
     implementation("com.kakao.maps.open:android:2.12.8")
     implementation("com.kakao.sdk:v2-all:2.11.0")
+
+    // --- tensorflow ---
+    implementation("org.tensorflow:tensorflow-lite:2.13.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
 }
