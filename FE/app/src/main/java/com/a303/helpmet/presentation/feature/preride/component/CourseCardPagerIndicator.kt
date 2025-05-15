@@ -13,7 +13,7 @@ import com.a303.helpmet.ui.theme.HelpmetTheme
 
 @Composable
 fun CoursesCardPagerIndicator(
-    pageCount: Int,
+    pageCount: Int = 1,
     currentPage: Int,
     modifier: Modifier = Modifier,
     activeColor: Color = HelpmetTheme.colors.primary,

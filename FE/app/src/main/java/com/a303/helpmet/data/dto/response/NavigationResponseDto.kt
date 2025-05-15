@@ -12,6 +12,12 @@ data class NavigationResponseDto(
     @SerialName("estimated_time_sec")
     val estimatedTimeSec: Int,
 
+    @SerialName("start_addr")
+    val startAddr: String,
+
+    @SerialName("end_addr")
+    val endAddr: String,
+
     @SerialName("route")
     val route: List<RouteSegmentDto>,
 

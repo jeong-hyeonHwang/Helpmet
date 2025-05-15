@@ -1,6 +1,5 @@
 package com.a303.helpmet.presentation.feature.navigation.usecase
 
-import android.util.Log
 import com.a303.helpmet.presentation.feature.navigation.RADIUS
 import com.a303.helpmet.presentation.feature.navigation.TRI_F
 import com.a303.helpmet.presentation.feature.navigation.TRI_S
@@ -12,7 +11,7 @@ import com.kakao.vectormap.shape.PolygonOptions
 import com.kakao.vectormap.shape.PolygonStyle
 import com.kakao.vectormap.shape.ShapeLayer
 
-class UpdateMapShapesUseCase {
+class UpdateUserPositionShapesUseCase {
     private var circlePolygon: Polygon? = null
     private var trianglePolygon: Polygon? = null
 

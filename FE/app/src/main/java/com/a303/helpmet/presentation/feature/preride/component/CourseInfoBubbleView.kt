@@ -36,11 +36,3 @@ fun CourseInfoBubbleView(
         )
     }
 }
-
-@Preview
-@Composable
-fun PreRidePreview(){
-    PreRideScreen(
-        onStartRide={}
-    )
-}
