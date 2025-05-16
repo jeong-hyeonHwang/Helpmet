@@ -11,7 +11,7 @@ EXTRA_MINUTES : int = 10
 
 def find_bike_route(from_lat:float, from_lon:float, limit_minutes:int, G):
     source = ox.distance.nearest_nodes(G, X=from_lon, Y=from_lat)
-    print(source)
+    # print(source)
 
     # 제한 시간 내 도달 가능한 노드 탐색
     travel_times = single_source_dijkstra_path_length(G, source, weight="travel_time")
