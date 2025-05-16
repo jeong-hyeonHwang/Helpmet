@@ -17,16 +17,22 @@ def _build_route_segments(G, route):
     segments = []
     for n1, n2 in zip(route, route[1:]):
         edge = G.edges[n1, n2, 0]
-        highway = edge.get("highway")
-        cycleway = edge.get("cycleway")
+        is_cycleway = edge.get("highway") == "cycleway"
+
+        if(is_cycleway and "geometry" in edge):
+            coords_raw = list(edge["geometry"].coords) # x, y 순서로 저장되어 있음 -> lon, lat으로 받음
+
+            coords = [Coordinate(lat=lat, lon=lon) for lon, lat in coords_raw]
+        else:
+            coords = [Coordinate(lat=G.nodes[n1]["y"], lon=G.nodes[n1]["x"]), Coordinate(lat=G.nodes[n2]["y"], lon=G.nodes[n2]["x"])]
 
         segment = RouteSegment(
-            from_=Coordinate(lat=G.nodes[n1]["y"], lon=G.nodes[n1]["x"]),
-            to=Coordinate(lat=G.nodes[n2]["y"], lon=G.nodes[n2]["x"]),
-            is_cycleway=(highway == "cycleway") or (cycleway in {"track", "lane"}),
+            coords=coords,
+            is_cycleway=is_cycleway,
             distance_m=edge.get("length", 0)
         )
         segments.append(segment)
+
     return segments
 
 def _cumulative_distances(G, route):

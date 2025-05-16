@@ -67,16 +67,6 @@ def build_combined_response(walk_result1 : RouteResponseDto, bike_result : Route
     # 구간 합치기 (RouteSegment 객체 리스트)
     all_segments = walk_result1.route + bike_result.route + walk_result2.route
 
-    route_segments = [
-        RouteSegment(
-            from_=segment.from_,
-            to=segment.to,
-            is_cycleway=segment.is_cycleway,
-            distance_m=segment.distance_m
-        )
-        for segment in all_segments
-    ]
-
     # 지시문 index 오프셋 계산
     offset1 = len(walk_result1.instructions)
     offset2 = offset1 + len(bike_result.instructions)
@@ -106,9 +96,9 @@ def build_combined_response(walk_result1 : RouteResponseDto, bike_result : Route
 
     return RouteResponseDto(
         start_addr=walk_result1.start_addr,
-        end_addr=walk_result2.end_addr,
+        end_addr=walk_result2.end_addr, 
         distance_m=total_distance,
         estimated_time_sec=total_time,
-        route=route_segments,
+        route=all_segments,
         instructions=all_instructions_raw
     )

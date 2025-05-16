@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel
 from typing import List
 
 
@@ -8,8 +8,7 @@ class Coordinate(BaseModel):
 
 
 class RouteSegment(BaseModel):
-    from_: Coordinate
-    to: Coordinate
+    coords: List[Coordinate]
     is_cycleway: bool
     distance_m: float
 
