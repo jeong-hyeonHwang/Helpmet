@@ -2,7 +2,7 @@ package com.a303.helpmet.presentation.feature.voiceinteraction.usecase
 
 import android.os.Handler
 import android.os.Looper
-import com.a303.helpmet.domain.model.DirectionCommand
+import com.a303.helpmet.domain.model.command.DirectionCommand
 import com.a303.helpmet.domain.model.DirectionState
 
 class TurnOnOffSignalUseCase(

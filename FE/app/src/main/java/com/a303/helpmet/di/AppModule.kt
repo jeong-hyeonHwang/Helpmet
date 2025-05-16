@@ -9,5 +9,7 @@ val appModule = listOf(
     navigationModule,
     voiceGuideModule,
     voiceInteractionModule,
-    webSocketModule
+    webSocketModule,
+    detectionModule
+
 )

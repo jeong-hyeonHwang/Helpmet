@@ -28,6 +28,7 @@ import com.kakao.vectormap.camera.CameraAnimation
 import com.kakao.vectormap.camera.CameraUpdateFactory
 import com.kakao.vectormap.route.RouteLineLayer
 import com.kakao.vectormap.shape.ShapeLayer
+import org.koin.androidx.compose.koinViewModel
 import java.lang.Exception
 
 enum class TurnState { IDLE, WAITING_FOR_LEFT_TURN, WAITING_FOR_RIGHT_TURN }
