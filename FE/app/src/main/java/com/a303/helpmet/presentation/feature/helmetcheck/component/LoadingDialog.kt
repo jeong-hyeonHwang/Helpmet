@@ -17,7 +17,10 @@ fun LoadingDialog(
     viewModel: HelmetCheckViewModel = koinViewModel(),
     message: String
 ){
-    Dialog(onDismissRequest = {viewModel.cancelDialog()}) {
+    Dialog(onDismissRequest = {
+        viewModel.cancelDialog()
+        viewModel.markDialogDismissed()
+    }) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = HelpmetTheme.colors.white1
