@@ -34,13 +34,12 @@ import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationView
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.cache.RouteCache
-
-//import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
 
 @Composable
 fun NavigationScreen(
@@ -48,7 +47,7 @@ fun NavigationScreen(
     navigationViewModel: NavigationViewModel = koinViewModel(),
     userPositionViewModel: UserPositionViewModel = viewModel(),
     routeViewModel: RouteViewModel = koinViewModel(),
-//    detectionViewModel: DetectionViewModel = koinViewModel(),
+    detectionViewModel: DetectionViewModel = koinViewModel(),
     voiceViewModel: VoiceInteractViewModel = koinViewModel(),
     navController: NavController
 ) {
@@ -84,14 +83,14 @@ fun NavigationScreen(
             voiceViewModel.startListening()
         }
 
-//        navigationViewModel.connectToSocket(detectionViewModel.onFrameReceived())
+        navigationViewModel.connectToSocket(detectionViewModel.onFrameReceived())
 
-//        detectionViewModel.startDetectionLoop()
+        detectionViewModel.startDetectionLoop()
     }
 
     DisposableEffect(Unit) {
         onDispose {
-//            navigationViewModel.disconnectFromSocket()
+            navigationViewModel.disconnectFromSocket()
             RouteCache.clear()
             voiceViewModel.stopListening()
         }
@@ -161,7 +160,6 @@ fun NavigationScreen(
         routeViewModel = routeViewModel
     )
 
-}
 }
 
 @Composable
