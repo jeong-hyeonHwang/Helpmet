@@ -1,6 +1,7 @@
 package com.a303.helpmet.data.repository
 
 import android.content.Context
+import android.graphics.Bitmap
 import com.a303.helpmet.BuildConfig
 import com.a303.helpmet.data.network.socket.CommandSocketClient
 import com.a303.helpmet.domain.model.command.DetectionCommand
@@ -12,10 +13,10 @@ class WebsocketRepository(
     private val socketClient: CommandSocketClient,
     private val context: Context
 ) {
-    fun connect() {
+    fun connect(onFrameReceived: (Bitmap) -> Unit) {
         val ip = getGatewayIp(context) ?: return
         val url = "ws://$ip:${BuildConfig.SOCKET_PORT}/ws"
-        socketClient.connect(url, ip)
+        socketClient.connect(url, ip, onFrameReceived)
     }
 
     fun sendDirectionCommand(command: DirectionCommand) {
