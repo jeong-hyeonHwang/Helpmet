@@ -5,7 +5,7 @@ data class RouteInfo(
     val duration: Int = 0,
     val distanceKm: Double = 0.0,
     val startLocationName: String = "",
+    val endLocationName: String = "",
     val startLocation: LatLngUi = LatLngUi(0.0,0.0),
-    val endLocation: LatLngUi = LatLngUi(0.0,0.0),
-    val endLocationName: String = ""
+    val endLocation: LatLngUi = LatLngUi(0.0,0.0)
 )

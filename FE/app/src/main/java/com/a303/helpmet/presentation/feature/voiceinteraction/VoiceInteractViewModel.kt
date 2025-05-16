@@ -38,7 +38,7 @@ class VoiceInteractViewModel(
         updateDirectionState = { DirectionStateManager.update(it) }
     )
 
-    private val turnOnOffSignal = TurnOnOffSignalUseCase(
+    val turnOnOffSignal = TurnOnOffSignalUseCase(
         speak = { text -> speak(text) },
         playTurnSignal = { direction -> playTurnSignal(direction) },
         sendCommand = { command -> sendDirectionCommandUseCase(command) }

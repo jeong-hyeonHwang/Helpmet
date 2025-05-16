@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import com.a303.helpmet.R
 import com.a303.helpmet.presentation.model.RouteInfo
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.a303.helpmet.util.extension.trimLocationName
 import com.kakao.vectormap.route.RouteLineOptions
 
 @Composable
@@ -57,12 +58,12 @@ fun CourseCardView(
                 Spacer(Modifier.padding(4.dp))
 
                 Text(
-                    text = stringResource(R.string.start_location, course.startLocationName),
+                    text = stringResource(R.string.start_location, course.startLocationName.trimLocationName()),
                     style = HelpmetTheme.typography.bodyMedium,
                     color = HelpmetTheme.colors.black1
                 )
                 Text(
-                    text = stringResource(R.string.end_location, course.endLocationName),
+                    text = stringResource(R.string.end_location, course.endLocationName.trimLocationName()),
                     style = HelpmetTheme.typography.bodyMedium,
                     color = HelpmetTheme.colors.black1
                 )

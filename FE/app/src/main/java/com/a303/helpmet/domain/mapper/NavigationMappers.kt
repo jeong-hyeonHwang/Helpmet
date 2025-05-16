@@ -36,6 +36,8 @@ fun InstructionDto.toDomain() = Instruction(
 fun NavigationResponseDto.toDomain() = NavigationRoute(
     distance        = distance,
     estimatedTimeSec = estimatedTimeSec,
+    startAddress = startAddr,
+    endAddress = endAddr,
     segments         = route.map { it.toDomain() },
     instructions     = instructions.map { it.toDomain() }
 )

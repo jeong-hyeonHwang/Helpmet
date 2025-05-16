@@ -34,6 +34,7 @@ import com.a303.helpmet.presentation.feature.navigation.component.StreamingNotic
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
+import com.a303.helpmet.presentation.feature.preride.component.LocationCircleButton
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 
 @Composable
@@ -133,14 +134,12 @@ fun NavigationScreen(
                 DirectionIcons()
             }
         }
-
         // 안내 멘트
         StreamingNoticeView(
             onFinish,
             navigationViewModel = navigationViewModel,
             routeViewModel = routeViewModel
         )
-
     }
 }
 
@@ -160,7 +159,6 @@ fun DirectionIcons(
             repeatMode = RepeatMode.Reverse
         )
     )
-
 
     Row(
         modifier = Modifier

@@ -8,10 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
-import com.a303.helpmet.presentation.feature.preride.PreRideScreen
 import com.a303.helpmet.ui.theme.HelpmetTheme
 
 @Composable
@@ -31,7 +29,8 @@ fun CourseInfoBubbleView(
         Text(
             text = stringResource(R.string.nearby_course_info),
             style = HelpmetTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 52.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth()
+                . padding(horizontal = 16.dp, vertical = 12.dp),
             textAlign = TextAlign.Center
         )
     }
