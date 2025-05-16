@@ -33,6 +33,8 @@ fun HelmetInfoView(
     val connectionState by viewModel.connectionState.collectAsState()
     val toastShown by viewModel.toastShown.collectAsState()
 
+    val shouldShowDialog by viewModel.shouldShowDialog.collectAsState()
+
     val wifiPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -64,7 +66,9 @@ fun HelmetInfoView(
             LoadingDialog(viewModel, stringResource(R.string.dialog_searching_helmet))
         }
         HelmetConnectionState.Found -> {
-            ConnectHelmetDialog(viewModel)
+            if (shouldShowDialog) {
+                ConnectHelmetDialog(viewModel)
+            }
         }
         HelmetConnectionState.Connecting -> {
             LoadingDialog(viewModel, stringResource(R.string.dialog_connecting_helmet))
@@ -160,6 +164,7 @@ fun HelmetInfoView(
                                         wifiPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                                         viewModel.markToastUnShown()
                                     } else {
+                                        viewModel.markDialogShown()
                                         viewModel.startSearchAndScan(context) { scanResults ->
                                             val helmetResult = scanResults.firstOrNull { it.SSID.startsWith("HELPMET") }
                                             if (helmetResult != null) {

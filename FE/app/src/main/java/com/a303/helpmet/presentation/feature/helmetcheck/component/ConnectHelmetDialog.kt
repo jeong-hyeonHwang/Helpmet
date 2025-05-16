@@ -25,7 +25,10 @@ fun ConnectHelmetDialog(
     val helmetName by viewModel.helmetName.collectAsState()
     val context = LocalContext.current
 
-    Dialog(onDismissRequest = { viewModel.cancelDialog() }) {
+    Dialog(onDismissRequest = {
+        viewModel.cancelDialog()
+        viewModel.markDialogDismissed()
+    }) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = HelpmetTheme.colors.white1

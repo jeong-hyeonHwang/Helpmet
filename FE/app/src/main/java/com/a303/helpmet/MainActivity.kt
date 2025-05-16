@@ -25,6 +25,7 @@ import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.framework.notification.NotificationChannelManager
 import com.a303.helpmet.framework.usage.service.AppUsageService
 import com.a303.helpmet.framework.usage.util.UsageAccessManager
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.kakao.sdk.common.util.Utility.getKeyHash
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
     private var hasCheckedUsageAccess = false  // 설정 복귀 감지용 플래그
     private lateinit var receiver: BroadcastReceiver
     val voiceInteractViewModel: VoiceInteractViewModel by viewModel()
+    val routeViewModel: RouteViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,7 +116,8 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack("helmet_check", inclusive = false)
                             },
                             voiceViewModel = voiceInteractViewModel,
-                            navController = navController
+                            navController = navController,
+                            routeViewModel = routeViewModel
                         )
                     }
                 }

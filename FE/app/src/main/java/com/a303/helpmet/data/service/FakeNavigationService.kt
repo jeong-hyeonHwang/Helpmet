@@ -165,4 +165,24 @@ class FakeNavigationService : NavigationService {
         val response = json.decodeFromString<BaseResponse<List<NavigationResponseDto>>>(jsonString)
         return response
     }
+
+    override suspend fun getBikeNavigationNearBy(
+        lat: Double,
+        lng: Double,
+        placeType: String
+    ): BaseResponse<NavigationResponseDto> {
+        // 예시로 더미 데이터 반환
+        return BaseResponse(
+            status = 200,
+            message = "success",
+            data = NavigationResponseDto(
+                distance = 1000.0,
+                estimatedTimeSec = 600,
+                startAddr = "현위치",
+                endAddr = "화장실",
+                route = listOf(), // 빈 RouteSegmentDto 리스트
+                instructions = listOf() // 빈 InstructionDto 리스트
+            )
+        )
+    }
 }
