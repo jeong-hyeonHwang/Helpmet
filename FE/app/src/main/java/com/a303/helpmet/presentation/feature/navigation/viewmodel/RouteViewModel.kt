@@ -1,5 +1,6 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.presentation.model.InstructionUi
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class RouteViewModel : ViewModel() {
 
@@ -37,7 +39,7 @@ class RouteViewModel : ViewModel() {
     // 캐시된 경로 불러오기
     fun loadFromCache() {
         RouteCache.getRoute()?.let {
-            _routeLineOptions.value = it
+            setRouteOption(it)
         }
 
         RouteCache.getInstructionList()?.let {
@@ -51,7 +53,12 @@ class RouteViewModel : ViewModel() {
 
     // 수동으로 경로 지정
     fun setRouteOption(option: RouteLineOptions) {
+        _routeLineOptions.value = null
         _routeLineOptions.value = option
+    }
+
+    fun setInstructionList(list: List<InstructionUi>){
+        _instructionList.value = list
     }
 
     // 외부에서 직접 진행률 업데이트

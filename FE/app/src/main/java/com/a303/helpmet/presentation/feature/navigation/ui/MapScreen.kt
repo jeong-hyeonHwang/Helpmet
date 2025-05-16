@@ -69,21 +69,59 @@ fun MapScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasLocPerm = granted }
 
-
     var turnState by remember { mutableStateOf(TurnState.IDLE) }
     var expectedHeading by remember { mutableStateOf<Float?>(null) }
+    var listenerRegistered by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         routeViewModel.loadFromCache()
         if (!hasLocPerm) permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
+        if (!listenerRegistered) {
+            voiceViewModel.setOnRouteUpdateListener { result ->
+                routeViewModel.setRouteOption(result.routeOptions)
+                routeViewModel.setInstructionList(result.instructionList)
+            }
+            listenerRegistered = true
+        }
     }
 
     LaunchedEffect(hasLocPerm) {
-        if (hasLocPerm) userPositionViewModel.startTracking(context) { _, _ -> }
+        if (hasLocPerm) {
+            userPositionViewModel.startTracking(context) { pos, _ ->
+                // 위치가 바뀔 때마다 호출됨
+                voiceViewModel.updatePosition(pos)
+            }
+        }
+    }
+
+    LaunchedEffect(routeOption) {
+        val layer = routeLineLayer
+        val map = kakaoMap
+        val option = routeOption
+
+        if (option != null && layer != null && map != null) {
+            layer.removeAll()
+
+            val routeLine = layer.addRouteLine(option)
+            routeViewModel.routeLine = routeLine
+
+            val allPoints = option.segments.flatMap { it.points }
+            val lats = allPoints.map { it.latitude }
+            val lons = allPoints.map { it.longitude }
+
+            val bounds = LatLngBounds(
+                LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
+                LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
+            )
+
+            map.moveCamera(CameraUpdateFactory.fitMapPoints(bounds, 100), CameraAnimation.from(500))
+        } else {
+            Log.w("NavigationUpdateError", "❗ 조건 불충분: option=$option, layer=$layer, map=$map")
+        }
     }
 
     // TEST: 테스트용 시뮬레이션 위치 이동
-
     /*
     LaunchedEffect(routeOption) {
         if (routeOption != null) {

@@ -45,7 +45,7 @@ fun NavigationScreen(
     onFinish: () -> Unit,
     navigationViewModel: NavigationViewModel = koinViewModel(),
     userPositionViewModel: UserPositionViewModel = viewModel(),
-    routeViewModel: RouteViewModel = koinViewModel(),
+    routeViewModel: RouteViewModel,
     voiceViewModel: VoiceInteractViewModel,
     navController: NavController
 ) {
@@ -92,7 +92,6 @@ fun NavigationScreen(
     }
 
     BackHandler {
-//        Log.d("VoiceHandler", "뒤로감")
         voiceViewModel.stopListening() // 강제로 STT/TTS 종료
         navController.popBackStack()
     }
