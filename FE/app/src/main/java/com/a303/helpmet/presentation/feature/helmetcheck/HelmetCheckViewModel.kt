@@ -26,6 +26,17 @@ class HelmetCheckViewModel : ViewModel() {
     private val _toastShown = MutableStateFlow(false)
     val toastShown: StateFlow<Boolean> = _toastShown
 
+    private val _shouldShowDialog = MutableStateFlow(true)
+    val shouldShowDialog: StateFlow<Boolean> = _shouldShowDialog
+
+    fun markDialogDismissed() {
+        _shouldShowDialog.value = false
+    }
+
+    fun markDialogShown() {
+        _shouldShowDialog.value = true
+    }
+
     fun markToastShown() {
         _toastShown.value = true
     }

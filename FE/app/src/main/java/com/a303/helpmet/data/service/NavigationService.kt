@@ -14,4 +14,12 @@ interface NavigationService {
         @Query("lon") lng: Double,
         @Query("max_minutes") maxMinutes: Int
         ): BaseResponse<List<NavigationResponseDto>>
+
+    @GET("/route/nearby")
+    suspend fun getBikeNavigationNearBy(
+        @Query("lat") lat: Double,
+        @Query("lon") lng: Double,
+        @Query("place_type") placeType: String
+    ): BaseResponse<NavigationResponseDto>
+
 }

@@ -1,19 +1,22 @@
 package com.a303.helpmet.presentation.feature.voiceinteraction
 
 import android.app.Application
-import android.os.Handler
-import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.usecase.SendDirectionCommandUseCase
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.sound.TickSoundManager
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.*
 import com.a303.helpmet.presentation.feature.voiceinteraction.util.UserReplyResponse
 import com.a303.helpmet.presentation.state.DirectionStateManager
 import com.a303.helpmet.presentation.model.VoiceCommand
 import com.a303.helpmet.util.handler.VoiceInteractionHandler
+import com.a303.helpmet.util.postPosition.appendAdverbialPostposition
+import com.a303.helpmet.util.postPosition.appendObjectPostposition
+import com.kakao.vectormap.LatLng
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,10 +24,9 @@ import kotlinx.coroutines.launch
 
 class VoiceInteractViewModel(
     application: Application,
-    private val navigateToRestroom: NavigateToRestroomUseCase,
-    private val navigateToRental: NavigateToRentalStationUseCase,
+    private val navigateToPlace: NavigateToPlaceUseCase,
     private val endGuide: EndGuideUseCase,
-    private val sendDirectionCommandUseCase: SendDirectionCommandUseCase
+    private val sendDirectionCommandUseCase: SendDirectionCommandUseCase,
 ) : AndroidViewModel(application) {
 
     private val tickSoundManager = TickSoundManager(
@@ -51,11 +53,14 @@ class VoiceInteractViewModel(
     private val _isVoiceReady = MutableStateFlow(false)
     val isVoiceReady: StateFlow<Boolean> get() = _isVoiceReady
 
+    private var currentPosition: LatLng? = null
+
+    fun updatePosition(pos: LatLng) {
+        currentPosition = pos
+    }
 
     init {
         voiceHandler.updateRecognitionCallback { text -> handleVoiceInput(text) }
-        voiceHandler.startListening()
-
         viewModelScope.launch {
             while (!_isVoiceReady.value) {
                 if (voiceHandler.isTtsReady) {
@@ -67,6 +72,42 @@ class VoiceInteractViewModel(
         }
     }
 
+    fun onReturnAlertReceived(){
+        promptContext = VoicePromptContext.Parking
+        speak(context.getString(R.string.voice_return_alarm_message))
+    }
+
+    private var onRouteUpdate: ((NavigateRouteResult) -> Unit)? = null
+
+    fun setOnRouteUpdateListener(callback: (NavigateRouteResult) -> Unit) {
+        this.onRouteUpdate = callback
+    }
+
+    private fun navigateToPlaceIfReady(placeType: String) {
+        speak(context.getString(R.string.voice_reroute_message))
+        val pos = currentPosition
+        if (pos == null) {
+            speak("사용자 위치를 파악할 수 없습니다. 잠시 후 다시 시도해주세요.")
+            return
+        }
+
+        viewModelScope.launch {
+            val result = navigateToPlace.invoke(context, pos, placeType)
+            if (result != null) {
+                onRouteUpdate?.invoke(result)
+                speak("${appendAdverbialPostposition(placeTypeToKor(placeType))} 안내를 시작합니다.")
+            } else {
+                speak("${appendObjectPostposition(placeTypeToKor(placeType))} 못찾았습니다. 잠시 후 다시 시도해주세요.")
+            }
+        }
+    }
+
+    private fun placeTypeToKor(placeType: String):String = when(placeType){
+        "toilet" -> "주변 화장실"
+        "rental" -> "주변 대여소"
+        else -> ""
+    }
+
     private fun handleVoiceInput(text: String) {
         // 후속 응답 처리
         if (promptContext != VoicePromptContext.None) {
@@ -74,20 +115,18 @@ class VoiceInteractViewModel(
                 UserReplyResponse.positiveResponses.any { it in text } -> {
                     when (promptContext) {
                         VoicePromptContext.Restroom -> {
-                            speak(context.getString(R.string.voice_reroute_message))
-                            navigateToRestroom()
+                            navigateToPlaceIfReady("toilet")
                         }
                         VoicePromptContext.Parking,
                         VoicePromptContext.EndGuide -> {
-                            speak(context.getString(R.string.voice_reroute_message))
-                            navigateToRental()
+                            navigateToPlaceIfReady("rental")
                         }
                         VoicePromptContext.None -> {}
                     }
                 }
                 UserReplyResponse.negativeResponses.any { it in text } -> {
                     if (promptContext is VoicePromptContext.EndGuide) {
-                        speak(context.getString(R.string.voice_guide_end_message))
+                        speak(context.getString(R.string.voice_guide_end_message), autoStartListening = false)
                         endGuide()
                     }
                 }
@@ -103,15 +142,10 @@ class VoiceInteractViewModel(
             commands.size <= 1 -> {
                 val command = commands.firstOrNull()
                 when (command) {
-                    VoiceCommand.TURN_LEFT -> {
-                        turnOnOffSignal(DirectionState.Left)
-                    }
-                    VoiceCommand.TURN_RIGHT -> {
-                        turnOnOffSignal(DirectionState.Right)
-                    }
-                    VoiceCommand.END_TURN_SIGNAL -> {
-                        turnOnOffSignal(DirectionState.None)
-                    }
+                    VoiceCommand.TURN_LEFT -> turnOnOffSignal(DirectionState.Left)
+                    VoiceCommand.TURN_RIGHT -> turnOnOffSignal(DirectionState.Right)
+                    VoiceCommand.END_TURN_SIGNAL -> turnOnOffSignal(DirectionState.None)
+
                     VoiceCommand.RESTROOM -> {
                         promptContext = VoicePromptContext.Restroom
                         speak(context.getString(R.string.voice_prompt_restroom))
@@ -132,16 +166,19 @@ class VoiceInteractViewModel(
                 speak("${label} 중 어떤 걸 도와드릴까요?")
             }
         }
-
         voiceHandler.startListening()
     }
 
-    fun speak(text: String) {
-        voiceHandler.speak(text)
+    fun speak(text: String, autoStartListening: Boolean = true) {
+        voiceHandler.speak(text, autoStartListening)
     }
 
     fun startListening() {
         voiceHandler.startListening()
+    }
+
+    fun stopListening(){
+        voiceHandler.destroy()
     }
 
     fun notifyPermissionMissing() {

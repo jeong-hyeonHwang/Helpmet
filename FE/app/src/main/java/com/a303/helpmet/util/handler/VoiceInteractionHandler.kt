@@ -10,6 +10,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.a303.helpmet.R
@@ -21,9 +22,11 @@ class VoiceInteractionHandler(private val context: Context){
     private var recognitionCallback: ((String) -> Unit)? = null
     private var tts: TextToSpeech? = null
     var isTtsReady = false
-        private set
 
     private var isListening = false
+    private var isTtsSpeaking = false
+
+    private var onTtsComplete: (() -> Unit)? = null
 
     init{
         initSpeechRecognizer()
@@ -32,8 +35,8 @@ class VoiceInteractionHandler(private val context: Context){
 
     // STT 초기화
     private fun initSpeechRecognizer(){
+        Log.d("hyewon", "stt init")
         if(!SpeechRecognizer.isRecognitionAvailable(context)){
-//            Log.e("VoiceHandler", "Speech Recognition is not available")
             return
         }
 
@@ -54,8 +57,6 @@ class VoiceInteractionHandler(private val context: Context){
             override fun onEndOfSpeech() {
                 // 사용자가 말하기 끝냄
                 isListening = false
-//                Log.d("VoiceHandler", "STT Ended – restarting")
-                restartListeningWithDelay()
             }
             override fun onError(error: Int) {
                 // 오류 발생
@@ -65,14 +66,16 @@ class VoiceInteractionHandler(private val context: Context){
                     SpeechRecognizer.ERROR_NETWORK,         // 2번
                     SpeechRecognizer.ERROR_SERVER,          // 4번
                     SpeechRecognizer.ERROR_SPEECH_TIMEOUT,  // 6번
-                    SpeechRecognizer.ERROR_NO_MATCH         // 7번
+                    SpeechRecognizer.ERROR_NO_MATCH,         // 7번
+                    11
                     // 3: 오디오 오류, 5: 클라이언트 오류, 8: 인식기 바쁨, 9: 권한 없음
                 )
                 if (error in retryableErrors) {
                     restartListeningWithDelay()
                 } else {
                     // 재시도 불가 오류: 권한 안내, 상태 정리 등 추가 처리
-                    speak(context.getString(R.string.voice_restart_failed))
+                    Log.e("VoiceHandler", "STT 중단 - 재시도 불가 코드: $error")
+//                    speak(context.getString(R.string.voice_restart_failed))
                 }
             }
             override fun onPartialResults(partialResults: Bundle?) {} // 중간 인식 결과
@@ -82,7 +85,9 @@ class VoiceInteractionHandler(private val context: Context){
 
     private fun restartListeningWithDelay(){
         Handler(Looper.getMainLooper()).postDelayed({
-            startListening()
+            if (!isListening && !isTtsSpeaking) {
+                startListening()
+            }
         }, 400)
     }
 
@@ -103,20 +108,20 @@ class VoiceInteractionHandler(private val context: Context){
 
     fun startListening(){
         if (!hasRecordAudioPermission()) {
-//            Log.e("VoiceHandler", "🎙️ STT 실행 불가 – RECORD_AUDIO 권한 없음")
             return
         }
 
-        if (isListening) {
-//            Log.w("VoiceHandler", "🚫 STT 중복 호출 방지 – 이미 듣는 중")
+        if (isListening || isTtsSpeaking) {
             return
         }
 
         isListening = true
+        speechRecognizer?.cancel()
         speechRecognizer?.startListening(createRecognizerIntent())
     }
 
     fun stopListening(){
+        isListening = false
         speechRecognizer?.stopListening()
     }
 
@@ -129,17 +134,41 @@ class VoiceInteractionHandler(private val context: Context){
             if(status == TextToSpeech.SUCCESS){
                 tts?.language = Locale.KOREAN
                 isTtsReady = true
-//                Log.d("VoiceHandler", "TTS Initialized")
+
+                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onDone(utteranceId: String?) {
+                        isTtsSpeaking = false
+                        Handler(Looper.getMainLooper()).post {
+                            onTtsComplete?.invoke()
+                            onTtsComplete = null
+                        }
+                    }
+
+                    override fun onError(utteranceId: String?) {
+                        isTtsSpeaking = false
+                    }
+
+                    override fun onStart(utteranceId: String?) {
+                        isTtsSpeaking = true
+                    }
+                })
             }else{
                 isTtsReady = false
-//                Log.e("VoiceHandler", "TTS Initialization Failed")
             }
         }
     }
 
-    fun speak(text: String){
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+    fun speak(text: String, autoStartListening: Boolean = true) {
+        if (!isTtsReady) return
+        stopListening()
+        isTtsSpeaking = true
+        onTtsComplete = {
+            isTtsSpeaking = false
+            if (autoStartListening) startListening()
+        }
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_id")
     }
+
 
     fun destroy(){
         stopListening()
