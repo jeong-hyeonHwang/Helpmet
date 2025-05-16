@@ -35,6 +35,7 @@ class VoiceInteractionHandler(private val context: Context){
 
     // STT 초기화
     private fun initSpeechRecognizer(){
+        Log.d("hyewon", "stt init")
         if(!SpeechRecognizer.isRecognitionAvailable(context)){
             return
         }
@@ -56,7 +57,6 @@ class VoiceInteractionHandler(private val context: Context){
             override fun onEndOfSpeech() {
                 // 사용자가 말하기 끝냄
                 isListening = false
-                restartListeningWithDelay()
             }
             override fun onError(error: Int) {
                 // 오류 발생
@@ -85,7 +85,9 @@ class VoiceInteractionHandler(private val context: Context){
 
     private fun restartListeningWithDelay(){
         Handler(Looper.getMainLooper()).postDelayed({
-            startListening()
+            if (!isListening && !isTtsSpeaking) {
+                startListening()
+            }
         }, 400)
     }
 
@@ -119,6 +121,7 @@ class VoiceInteractionHandler(private val context: Context){
     }
 
     fun stopListening(){
+        isListening = false
         speechRecognizer?.stopListening()
     }
 
@@ -137,6 +140,7 @@ class VoiceInteractionHandler(private val context: Context){
                         isTtsSpeaking = false
                         Handler(Looper.getMainLooper()).post {
                             onTtsComplete?.invoke()
+                            onTtsComplete = null
                         }
                     }
 
@@ -154,11 +158,17 @@ class VoiceInteractionHandler(private val context: Context){
         }
     }
 
-    fun speak(text: String, onComplete: (() -> Unit)? = null){
+    fun speak(text: String, autoStartListening: Boolean = true) {
+        if (!isTtsReady) return
+        stopListening()
         isTtsSpeaking = true
-        onTtsComplete = onComplete
+        onTtsComplete = {
+            isTtsSpeaking = false
+            if (autoStartListening) startListening()
+        }
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_id")
     }
+
 
     fun destroy(){
         stopListening()
