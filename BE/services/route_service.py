@@ -19,7 +19,7 @@ def _build_route_segments(G, route):
         edge = G.edges[n1, n2, 0]
         is_cycleway = edge.get("highway") == "cycleway"
 
-        if(is_cycleway and "geometry" in edge):
+        if("geometry" in edge):
             coords_raw = list(edge["geometry"].coords) # x, y 순서로 저장되어 있음 -> lon, lat으로 받음
 
             coords = [Coordinate(lat=lat, lon=lon) for lon, lat in coords_raw]
