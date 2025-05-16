@@ -1,4 +1,4 @@
-package com.a303.helpmet.domain.model
+package com.a303.helpmet.domain.model.command
 
 import kotlinx.serialization.Serializable
 

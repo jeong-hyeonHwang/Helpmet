@@ -3,7 +3,6 @@ package com.a303.helpmet.data.ml.detector
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.RectF
-import android.util.Log
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -27,7 +26,6 @@ class YoloV5TFLiteDetector(context: Context) {
     fun detect(bitmap: Bitmap): List<DetectionResult> {
 
         var startTime = System.currentTimeMillis()
-//        Log.d("WebSocket", "객체 탐지 시작")
 
         val resized = Bitmap.createScaledBitmap(bitmap, imageSize, imageSize, true)
         val input = bitmapToByteBuffer(resized)
@@ -37,7 +35,6 @@ class YoloV5TFLiteDetector(context: Context) {
 
         var endTime = System.currentTimeMillis()
 
-//        Log.d("WebSocket", "객체 탐지에 소요된 시간: "+(endTime-startTime))
         return postProcess(output[0])
     }
 
@@ -89,7 +86,6 @@ class YoloV5TFLiteDetector(context: Context) {
                 )
             )
         }
-
         return results
     }
 

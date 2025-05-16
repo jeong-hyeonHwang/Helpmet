@@ -2,7 +2,6 @@ package com.a303.helpmet.presentation.feature.navigation.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,9 +34,11 @@ import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationView
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
+import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
+import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.cache.RouteCache
 
 @Composable
@@ -47,6 +48,8 @@ fun NavigationScreen(
     userPositionViewModel: UserPositionViewModel = viewModel(),
     routeViewModel: RouteViewModel,
     voiceViewModel: VoiceInteractViewModel,
+    detectionViewModel: DetectionViewModel = koinViewModel(),
+    voiceViewModel: VoiceInteractViewModel = koinViewModel(),
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -80,12 +83,15 @@ fun NavigationScreen(
         } else {
             voiceViewModel.startListening()
         }
-        navigationViewModel.connectToDirectionSocket()
+
+        navigationViewModel.connectToSocket(detectionViewModel.onFrameReceived())
+
+        detectionViewModel.startDetectionLoop()
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            navigationViewModel.disconnectFromDirectionSocket()
+            navigationViewModel.disconnectFromSocket()
             RouteCache.clear()
             voiceViewModel.stopListening()
         }
@@ -96,64 +102,64 @@ fun NavigationScreen(
         navController.popBackStack()
     }
 
-    val isActiveStreamingView by navigationViewModel.isActiveStreamingView.collectAsState()
 
     // 2) 내 위치 자동 추적 플래그
     var followUser by remember { mutableStateOf(true) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (isActiveStreamingView) {
-            StreamingView()
-        }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        StreamingView()
 
-        // 카메라 뷰 토글 버튼
+    // 카메라 뷰 토글 버튼
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(HelpmetTheme.colors.white1)
+            .padding(vertical = 8.dp)
+            .clickable { navigationViewModel.toggleStreaming() },
+        contentAlignment = Alignment.Center
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .clickable { navigationViewModel.toggleStreaming() },
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(60.dp)
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(Color.Gray)
-            )
-        }
-
-        // 지도
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            MapScreen(
-                followUser = followUser,
-                onFollowHandled = { followUser = false },
-                routeViewModel = routeViewModel,
-                userPositionViewModel = userPositionViewModel,
-                voiceViewModel = voiceViewModel
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            ) {
-                DirectionIcons()
-            }
-        }
-
-        // 안내 멘트
-        StreamingNoticeView(
-            onFinish,
-            navigationViewModel = navigationViewModel,
-            routeViewModel = routeViewModel
+                .width(60.dp)
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(HelpmetTheme.colors.gray1)
         )
-
     }
+
+    // 지도
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+    ) {
+        MapScreen(
+            followUser = followUser,
+            onFollowHandled = { followUser = false },
+            routeViewModel = routeViewModel,
+            userPositionViewModel = userPositionViewModel,
+            voiceViewModel = voiceViewModel
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
+        ) {
+            DirectionIcons()
+        }
+    }
+
+    // 안내 멘트
+    StreamingNoticeView(
+        onFinish,
+        navigationViewModel = navigationViewModel,
+        routeViewModel = routeViewModel
+    )
+
+}
 }
 
 @Composable
