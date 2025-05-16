@@ -12,17 +12,22 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.a303.helpmet.domain.extension.isApproaching
 import com.a303.helpmet.domain.model.Action
+import com.a303.helpmet.domain.model.DirectionState
+import com.a303.helpmet.presentation.feature.navigation.usecase.AdjustCameraUseCase
 import com.a303.helpmet.presentation.feature.navigation.usecase.UpdateUserPositionShapesUseCase
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
+import com.a303.helpmet.presentation.model.LatLngUi
+import com.a303.helpmet.presentation.model.TurnState
+import com.a303.helpmet.util.GeoUtils
 import com.kakao.vectormap.*
 import com.kakao.vectormap.camera.CameraAnimation
 import com.kakao.vectormap.camera.CameraUpdateFactory
@@ -30,8 +35,6 @@ import com.kakao.vectormap.route.RouteLineLayer
 import com.kakao.vectormap.shape.ShapeLayer
 import org.koin.androidx.compose.koinViewModel
 import java.lang.Exception
-
-enum class TurnState { IDLE, WAITING_FOR_LEFT_TURN, WAITING_FOR_RIGHT_TURN }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -42,7 +45,8 @@ fun MapScreen(
     routeViewModel: RouteViewModel,
     userPositionViewModel: UserPositionViewModel,
     voiceViewModel: VoiceInteractViewModel,
-    updateMapShapes: UpdateUserPositionShapesUseCase = UpdateUserPositionShapesUseCase()
+    updateMapShapes: UpdateUserPositionShapesUseCase = UpdateUserPositionShapesUseCase(),
+    adjustCameraUseCase: AdjustCameraUseCase = AdjustCameraUseCase()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -126,37 +130,7 @@ fun MapScreen(
     /*
     LaunchedEffect(routeOption) {
         if (routeOption != null) {
-            val simulatedPath = listOf(
-                LatLng.from(37.5016331, 127.0399224),
-                LatLng.from(37.5015831, 127.0399224),
-                LatLng.from(37.5015331, 127.0399224),
-                LatLng.from(37.5015331, 127.0399824),
-                LatLng.from(37.5014500, 127.0399800),
-                LatLng.from(37.5012806, 127.0400408),
-                LatLng.from(37.5009753, 127.0401896),
-                LatLng.from(37.5009408, 127.0402094),
-                LatLng.from(37.5008408, 127.0402094),
-                LatLng.from(37.5007408, 127.0402094),
-                LatLng.from(37.5006408, 127.0402094),
-                LatLng.from(37.5005832, 127.0403949),
-                LatLng.from(37.5005832, 127.0404949),
-                LatLng.from(37.5005832, 127.0405949),
-                LatLng.from(37.5005832, 127.0408949),
-                LatLng.from(37.5005832, 127.0409949),
-                LatLng.from(37.5005832, 127.0411949),
-                LatLng.from(37.5008822, 127.0413418),
-                LatLng.from(37.5010206, 127.0417805),
-                LatLng.from(37.5010206, 127.0417905),
-                LatLng.from(37.5010206, 127.0418005),
-                LatLng.from(37.5010206, 127.0419005),
-                LatLng.from(37.5010206, 127.0420005),
-                LatLng.from(37.5010206, 127.0421005),
-                LatLng.from(37.5010206, 127.0422005),
-                LatLng.from(37.5010206, 127.0423005),
-                LatLng.from(37.5010909, 127.0424105),
-                LatLng.from(37.5012198, 127.042809)
-            )
-            routeViewModel.simulateMovementWithProgressUpdate(simulatedPath) {
+            routeViewModel.simulateMovementWithProgressUpdate(SimulatedPathTest.simulatedPath) {
                 userPositionViewModel.setMockPosition(it)
             }
         }
@@ -227,15 +201,26 @@ fun MapScreen(
     )
 
     // 4) 사용자 따라가기
-    LaunchedEffect(followUser, position) {
+    LaunchedEffect(followUser, position, heading) {
         if (!isVoiceReady) return@LaunchedEffect
+        if (position.latitude == 0.0 && position.longitude == 0.0) return@LaunchedEffect
+        if (followUser && kakaoMap != null) {
 
-        if (followUser) {
-            kakaoMap?.moveCamera(
-                CameraUpdateFactory.newCenterPosition(position, defaultZoom),
-                CameraAnimation.from(300)
-            )
-            onFollowHandled()
+            val firstSegment = routeOption?.segments?.firstOrNull()
+            val from = firstSegment?.points?.getOrNull(0)
+            val to = firstSegment?.points?.getOrNull(1)
+
+            if (from != null && to != null) {
+                adjustCameraUseCase(
+                    kakaoMap = kakaoMap!!,
+                    currentPosition = position,
+                    from = from,
+                    to = LatLngUi(to.latitude, to.longitude),
+                    zoom = defaultZoom
+                )
+
+                onFollowHandled()
+            }
         }
 
         routeViewModel.instructionList.value
@@ -268,21 +253,37 @@ fun MapScreen(
                 } else if ((turnState == TurnState.WAITING_FOR_RIGHT_TURN ||
                     turnState == TurnState.WAITING_FOR_LEFT_TURN)
                     && expectedHeading != null) {
-                    val delta = normalizeAngle(heading - expectedHeading!!)
+                    val delta = GeoUtils.normalizeAngle(heading.toDouble() - expectedHeading!!)
                     val passed = when (turnState) {
-                        TurnState.WAITING_FOR_LEFT_TURN  -> delta < -60f
-                        TurnState.WAITING_FOR_RIGHT_TURN -> delta > 60f
+                        TurnState.WAITING_FOR_LEFT_TURN  -> delta < -45f
+                        TurnState.WAITING_FOR_RIGHT_TURN -> delta > 45f
                         else -> false
                     }
 
+                    Log.d("ANGLE_CHECK", "CURRENT ANGLE: ${delta}")
                     if (passed) {
                         // 회전 감지 완료
                         turnState = TurnState.IDLE
                         expectedHeading = null
+
+                        // 다음 안내 지점으로 방향 벡터 구해 회전
+                        val nextInstruction = routeViewModel.instructionList.value
+                            ?.firstOrNull { !it.isSpoken }
+
+                        if (nextInstruction != null) {
+                            val to = LatLngUi(nextInstruction.location.latitude, nextInstruction.location.longitude)
+                            adjustCameraUseCase(
+                                kakaoMap = kakaoMap!!,
+                                currentPosition = position,
+                                from = position,
+                                to = to,
+                                zoom = defaultZoom
+                            )
+                            voiceViewModel.turnOnOffSignal(DirectionState.None)
+                        }
                     }
                 }
             }
-
     }
 
     // 5) 위치 변화 → 도형 업데이트
@@ -293,11 +294,4 @@ fun MapScreen(
                 routeViewModel.setUserPositionAndUpdateProgress(pos)
             }
     }
-}
-
-fun normalizeAngle(deg: Float): Float {
-    var angle = deg % 360f
-    if (angle < -180f) angle += 360f
-    if (angle > 180f) angle -= 360f
-    return angle
 }

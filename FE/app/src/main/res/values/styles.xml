@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="BlueRouteLineStyle" parent="RouteLineStyle">
+    <style name="CycleRouteLineStyle" parent="RouteLineStyle">
         <item name="mapLineWidth">26.0</item>
-        <item name="mapLineColor">#0597F2</item>
+        <item name="mapLineColor">#FF2EDB8C</item>
         <item name="mapStrokeWidth">3</item>
         <item name="mapStrokeColor">#ffffff</item>
     </style>
 
-    <style name="RedRouteLineStyle" parent="RouteLineStyle">
+    <style name="WalkRouteLineStyle" parent="RouteLineStyle">
         <item name="mapLineWidth">26.0</item>
-        <item name="mapLineColor">#F24607</item>
+        <item name="mapLineColor">#FF8E8E93</item>
         <item name="mapStrokeWidth">3</item>
         <item name="mapStrokeColor">#ffffff</item>
     </style>

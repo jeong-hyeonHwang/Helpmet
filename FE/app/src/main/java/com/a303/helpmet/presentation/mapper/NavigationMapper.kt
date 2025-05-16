@@ -38,9 +38,9 @@ fun NavigationRoute.toRouteInfo(index: Int): RouteInfo = RouteInfo(
     routeId = index,
     duration = estimatedTimeSec / 60,
     distanceKm = distance / 1000.0,
-    startLocationName = "시작지점입니다", // MARK: 테스트 데이터셋
+    startLocationName = startAddress,
+    endLocationName = endAddress,
     startLocation = segments.first().from.toUi(),
-    endLocationName = "끝지점입니다", // MARK: 테스트 데이터셋
     endLocation = segments.last().to.toUi())
 
 /**
@@ -56,9 +56,9 @@ fun NavigationRoute.toRouteLineOptions(context: Context): RouteLineOptions {
         )
         // 스타일 리소스 분기 (예: 자전거도로 vs 보행자)
         val styleRes = if (domainSeg.isCycle)
-            R.style.BlueRouteLineStyle
+            R.style.CycleRouteLineStyle
         else
-            R.style.RedRouteLineStyle
+            R.style.WalkRouteLineStyle
 
         // RouteLineStyle.from(context, styleRes) → RouteLineSegment 생성
         RouteLineSegment.from(pts, RouteLineStyle.from(context, styleRes))

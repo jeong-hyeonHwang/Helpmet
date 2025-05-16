@@ -3,6 +3,7 @@ package com.a303.helpmet.presentation.feature.navigation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.a303.helpmet.R
 import com.a303.helpmet.presentation.model.InstructionUi
 import com.a303.helpmet.presentation.model.RouteInfo
 import com.a303.helpmet.util.RouteProgressCalculator
@@ -36,8 +37,12 @@ class RouteViewModel : ViewModel() {
     // 지도 위에 실제 표시되는 RouteLine 객체
     var routeLine: RouteLine? = null
 
+    // 이전 진행률 저장을 위한 변수
+    private var lastProgress: Float = 0f
+
     // 캐시된 경로 불러오기
     fun loadFromCache() {
+
         RouteCache.getRoute()?.let {
             setRouteOption(it)
         }
@@ -49,6 +54,7 @@ class RouteViewModel : ViewModel() {
         RouteCache.getRouteInfo()?.let {
             _routeInfo.value = it
         }
+
     }
 
     // 수동으로 경로 지정
@@ -70,14 +76,15 @@ class RouteViewModel : ViewModel() {
     fun setUserPositionAndUpdateProgress(user: LatLng) {
         val route = _routeLineOptions.value?.segments?.flatMap { it.points } ?: return
 
-        val (progress, snapped) = RouteProgressCalculator.calculateProgressAndSnappedPoint(user, route)
+        val (progress, snapped) =
+            RouteProgressCalculator.calculateProgressAndSnappedPoint(user, route, lastProgress)
 
         if (RouteProgressCalculator.distance(user, snapped) <= 50.0) {
             routeLine?.progressTo(progress, 0)
             _snappedPosition.value = snapped
+            lastProgress = progress
         }
     }
-
     // TEST: 테스트용 사용자 이동 시뮬레이션
     fun simulateMovementWithProgressUpdate(
         path: List<LatLng>,
@@ -88,7 +95,8 @@ class RouteViewModel : ViewModel() {
             val route = _routeLineOptions.value?.segments?.flatMap { it.points } ?: return@launch
 
             for (point in path) {
-                val (progress, snapped) = RouteProgressCalculator.calculateProgressAndSnappedPoint(point, route)
+                val (progress, snapped) =
+                    RouteProgressCalculator.calculateProgressAndSnappedPoint(point, route, lastProgress)
                 routeLine?.progressTo(progress, 0)
                 _snappedPosition.value = snapped
                 onPositionUpdate(point)

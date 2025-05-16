@@ -13,7 +13,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
@@ -22,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.presentation.feature.preride.component.CourseCardPager
 import com.a303.helpmet.presentation.feature.preride.component.CourseInfoBubbleView
 import com.a303.helpmet.presentation.feature.preride.component.LocationCircleButton
@@ -31,7 +29,6 @@ import com.a303.helpmet.presentation.feature.preride.component.RouteMapLoadingVi
 import com.a303.helpmet.util.cache.RouteCache
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import org.koin.androidx.compose.koinViewModel
 
@@ -72,8 +69,6 @@ fun PreRideScreen(
     LaunchedEffect(hasLocPerm) {
         if (hasLocPerm) userPositionViewModel.startTracking(context) { _, _ -> }
     }
-
-    val position by userPositionViewModel.position.collectAsState()
 
     // 이어폰 연결 확인 함수
     fun isHeadsetConnected(): Boolean {

@@ -4,8 +4,13 @@ import com.kakao.vectormap.LatLng
 import kotlin.math.*
 
 object RouteProgressCalculator {
-    fun calculateProgressAndSnappedPoint(user: LatLng, route: List<LatLng>): Pair<Float, LatLng> {
-        if (route.size < 2) return 0f to user
+
+    fun calculateProgressAndSnappedPoint(
+        user: LatLng,
+        route: List<LatLng>,
+        previousProgress: Float = 0f
+    ): Pair<Float, LatLng> {
+        if (route.size < 2) return previousProgress to user
 
         var total = 0.0
         var progress = 0.0
@@ -26,13 +31,14 @@ object RouteProgressCalculator {
             }
         }
 
-        return (progress / total).toFloat().coerceIn(0f, 1f) to snappedPoint
+        val progressRatio = (progress / total).toFloat().coerceIn(0f, 1f)
+        return max(progressRatio, previousProgress) to snappedPoint
     }
 
     fun distance(a: LatLng, b: LatLng): Double {
         val dLat = Math.toRadians(b.latitude - a.latitude)
         val dLon = Math.toRadians(b.longitude - a.longitude)
-        val r = 6371000.0 // radius of Earth in meters
+        val r = 6371000.0 // 지구 반지름
         val lat1 = Math.toRadians(a.latitude)
         val lat2 = Math.toRadians(b.latitude)
 

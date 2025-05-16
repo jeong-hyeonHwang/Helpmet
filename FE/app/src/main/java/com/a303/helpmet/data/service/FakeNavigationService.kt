@@ -1,10 +1,8 @@
 package com.a303.helpmet.data.service
 
 import com.a303.helpmet.data.dto.response.NavigationResponseDto
-import com.a303.helpmet.data.network.api_services.ApiResult
 import com.a303.helpmet.data.network.api_services.BaseResponse
 import kotlinx.serialization.json.Json
-import retrofit2.Response
 
 class FakeNavigationService : NavigationService {
     override suspend fun getBikeNavigationRouteList(
@@ -139,8 +137,8 @@ class FakeNavigationService : NavigationService {
             "lon": 127.0403949
           },
           "distance_m": 226,
-          "action": "우회전",
-          "message": "소풍 앞에서 우회전하세요"
+          "action": "좌회전",
+          "message": "소풍 앞에서 좌회전하세요"
         },
         {
           "index": 4,

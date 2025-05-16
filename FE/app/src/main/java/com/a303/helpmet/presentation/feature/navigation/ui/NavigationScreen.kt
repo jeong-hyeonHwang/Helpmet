@@ -37,6 +37,7 @@ import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
+import com.a303.helpmet.presentation.feature.preride.component.LocationCircleButton
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.cache.RouteCache
@@ -49,7 +50,6 @@ fun NavigationScreen(
     routeViewModel: RouteViewModel,
     voiceViewModel: VoiceInteractViewModel,
     detectionViewModel: DetectionViewModel = koinViewModel(),
-    voiceViewModel: VoiceInteractViewModel = koinViewModel(),
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -150,15 +150,13 @@ fun NavigationScreen(
         ) {
             DirectionIcons()
         }
+        // 안내 멘트
+        StreamingNoticeView(
+            onFinish,
+            navigationViewModel = navigationViewModel,
+            routeViewModel = routeViewModel
+        )
     }
-
-    // 안내 멘트
-    StreamingNoticeView(
-        onFinish,
-        navigationViewModel = navigationViewModel,
-        routeViewModel = routeViewModel
-    )
-
 }
 }
 
@@ -178,7 +176,6 @@ fun DirectionIcons(
             repeatMode = RepeatMode.Reverse
         )
     )
-
 
     Row(
         modifier = Modifier

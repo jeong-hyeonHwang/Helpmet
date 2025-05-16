@@ -34,6 +34,7 @@ import com.a303.helpmet.domain.model.StreamingNoticeState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
+import com.a303.helpmet.util.extension.trimLocationName
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
 import com.a303.helpmet.util.postPosition.appendSubjectPostposition
 import org.koin.androidx.compose.koinViewModel
@@ -114,7 +115,7 @@ fun DefaultNotice(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            routeInfo?.endLocationName?.let { Text(text= it) }
+            routeInfo?.endLocationName?.let { Text(text= it.trimLocationName()) }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
