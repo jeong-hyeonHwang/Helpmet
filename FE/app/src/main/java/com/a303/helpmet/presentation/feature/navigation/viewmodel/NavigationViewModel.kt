@@ -1,6 +1,7 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import DeviceProvider
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.repository.DeviceRepository
@@ -64,15 +65,15 @@ class NavigationViewModel(
         }
     }
 
-    fun connectToDirectionSocket() {
+    fun connectToSocket(onFrameReceived: (Bitmap) -> Unit) {
         if (!isSocketConnected){
-            websocketRepository.connect()
+            websocketRepository.connect(onFrameReceived)
             isSocketConnected = true
         }
 
     }
 
-    fun disconnectFromDirectionSocket() {
+    fun disconnectFromSocket() {
         if (isSocketConnected) {
             websocketRepository.disconnect()
             isSocketConnected = false
