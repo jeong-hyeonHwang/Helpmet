@@ -110,7 +110,6 @@ fun NavigationScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         StreamingView()
-    }
 
     // 카메라 뷰 토글 버튼
     Box(
@@ -134,7 +133,7 @@ fun NavigationScreen(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-//            .weight(1f)
+            .weight(1f)
     ) {
         MapScreen(
             followUser = followUser,
@@ -160,6 +159,7 @@ fun NavigationScreen(
         routeViewModel = routeViewModel
     )
 
+}
 }
 
 @Composable
