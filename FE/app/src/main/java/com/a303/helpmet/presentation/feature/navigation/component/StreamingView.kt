@@ -14,16 +14,32 @@ import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.requiredHeightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.a303.helpmet.BuildConfig
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
+import com.a303.helpmet.R
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.handler.getGatewayIp
@@ -43,6 +59,7 @@ fun StreamingView(
     val gatewayIp = getGatewayIp(context)
     val webPageUrl = "http://$gatewayIp:${BuildConfig.SOCKET_PORT}/"
     val isValidPi by navigationViewModel.isValidPi.collectAsState()
+    val isAccessible by navigationViewModel.isAccessible.collectAsState()
 
     // ✅ 최초 실행 시 WebSocket 연결 준비
     LaunchedEffect(gatewayIp) {
@@ -57,19 +74,54 @@ fun StreamingView(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(HelpmetTheme.colors.black1)
+            .background(HelpmetTheme.colors.gray1)
             .requiredHeightIn(max = streamingViewHeight)
-            .height(if (isActiveStreamingView) streamingViewHeight else 0.dp)
+            .height(if (isActiveStreamingView) streamingViewHeight else 0.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+
     ) {
+
         when (isValidPi) {
             null -> {
-                Text("라즈베리파이를 찾는 중입니다...", color = HelpmetTheme.colors.primary)
+                Text(
+                    text = "라즈베리파이를 찾는 중입니다...",
+                    style = HelpmetTheme.typography.title,
+                    color = HelpmetTheme.colors.primaryLight
+                )
             }
             true -> {
-                WebRTCPage(url = webPageUrl)
+                if (isAccessible) WebRTCPage(url = webPageUrl)
+                else {
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_util_helmet),
+                        contentDescription = "사용중",
+                        tint = HelpmetTheme.colors.primaryLight,
+                        modifier = Modifier.size(100.dp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        text = "누군가가 헬프멧을 사용하고 있습니다.",
+                        style = HelpmetTheme.typography.title,
+                        color = HelpmetTheme.colors.primaryLight,
+                    )
+                }
+
             }
             false -> {
-                Text("헬프멧과 연결되지 않았습니다.", color = HelpmetTheme.colors.primary)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_util_helmet),
+                    contentDescription = "연결 필요",
+                    tint = HelpmetTheme.colors.primaryLight,
+                    modifier = Modifier.size(100.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "헬프멧과 연결되지 않았습니다.",
+                    style = HelpmetTheme.typography.title,
+                    color = HelpmetTheme.colors.primaryLight,
+                )
             }
         }
     }
