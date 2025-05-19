@@ -78,7 +78,11 @@ async def select_best_bike_station_by_walk(
 
     for station in station_candidates:
         try:
-            to_node = ox.distance.nearest_nodes(G_walk, X=float(station.lon), Y=float(station.lat))
+            if station.osmid in G_walk.nodes:
+                to_node = station.osmid
+            else:
+                to_node = ox.distance.nearest_nodes(G_walk, X=float(station.lon), Y=float(station.lat))
+
             path = nx.shortest_path(G_walk, from_node, to_node, weight="length")
             gdf = ox.utils_graph.route_to_gdf(G_walk, path)
             dist = gdf["length"].sum()
