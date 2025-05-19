@@ -1,6 +1,9 @@
 import osmnx as ox
 import networkx as nx
 import math
+import logging
+
+logger = logging.getLogger("services.route_util")
 
 def nearest_nodes(G, from_lat, from_lon, to_lat, to_lon):
     return (
@@ -70,7 +73,7 @@ def get_nearest_poi(lat, lon, radius=30):
             nearest_poi = pois.sort_values("distance").iloc[0]
             return nearest_poi["name"]
     except Exception as e:
-        print(f"[ERROR] POI 탐색 실패: {e}")
+        logger.debug(f"[ERROR] POI 탐색 실패: {e}")
     return ""
 
 def is_crosswalk_node(node_id, G):
