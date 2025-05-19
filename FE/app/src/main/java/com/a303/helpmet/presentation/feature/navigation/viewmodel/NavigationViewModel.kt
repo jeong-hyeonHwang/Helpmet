@@ -27,7 +27,6 @@ class NavigationViewModel(
 
     val directionState: StateFlow<DirectionState> = DirectionStateManager.directionState
 
-    private var noticeResetJob: Job? = null
     private var isSocketConnected = false
 
     // 토글 함수
@@ -38,6 +37,10 @@ class NavigationViewModel(
     private val _isValidPi = MutableStateFlow<Boolean?>(null)
     val isValidPi: StateFlow<Boolean?> = _isValidPi
 
+    private val _isAccessState = MutableStateFlow(false);
+    val isAccessible: StateFlow<Boolean> = _isAccessState
+
+
     fun validateDevice(baseUrl: String) {
         viewModelScope.launch {
             val retrofit = getWifiNetworkUseCase()
@@ -46,8 +49,12 @@ class NavigationViewModel(
             val repository = service?.let { DeviceRepository(it) }
 
             if (repository != null) {
-                _isValidPi.value = repository.isHelpmetDevice()
+                val (isValidPi, isAccess) = repository.isHelpmetDevice()
+                _isValidPi.value = isValidPi
+                _isAccessState.value = isAccess
+
             }
+
         }
     }
 
