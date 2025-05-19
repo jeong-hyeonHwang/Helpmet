@@ -27,6 +27,9 @@ class RouteViewModel : ViewModel() {
     private val _instructionList = MutableStateFlow<List<InstructionUi>?>(null)
     val instructionList: StateFlow<List<InstructionUi>?> get() = _instructionList
 
+    private val _destination = MutableStateFlow<InstructionUi?>(null)
+    val destination : StateFlow<InstructionUi?> get() = _destination
+
     private val _routeInfo = MutableStateFlow<RouteInfo?>(null)
     val routeInfo: StateFlow<RouteInfo?> get() = _routeInfo
 
@@ -49,6 +52,7 @@ class RouteViewModel : ViewModel() {
 
         RouteCache.getInstructionList()?.let {
             _instructionList.value = it
+            _destination.value = it.lastOrNull()
         }
 
         RouteCache.getRouteInfo()?.let {
@@ -65,6 +69,7 @@ class RouteViewModel : ViewModel() {
 
     fun setInstructionList(list: List<InstructionUi>){
         _instructionList.value = list
+        _destination.value = list.lastOrNull()
     }
 
     // 외부에서 직접 진행률 업데이트

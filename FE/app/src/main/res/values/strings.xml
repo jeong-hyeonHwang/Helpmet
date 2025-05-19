@@ -96,6 +96,7 @@
     <string name="voice_permission_required">음성 인식을 위해 마이크 권한이 필요합니다.</string>
     <string name="voice_reroute_message">경로를 재탐색합니다.</string>
     <string name="voice_guide_end_message">안내를 종료합니다.</string>
+    <string name="voice_arrival_destination_message">목적지에 도착했습니다. 안내를 종료합니다.</string>
     <string name="voice_turn_left_signal">좌회전 신호를 켰습니다.</string>
     <string name="voice_turn_right_signal">우회전 신호를 켰습니다.</string>
     <string name="voice_prompt_restroom">가장 가까운 화장실로 안내할까요?</string>
