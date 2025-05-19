@@ -22,7 +22,8 @@ def assign_travel_time(G):
 def load_graphs(app):
     print("📂 Loading walk and bike graphs into app.state...")
     # G_walk = ox.load_graphml("data/seoul_walk_raw.graphml")
-    G_walk = ox.load_graphml("data/seoul_combined2.graphml")
+    # G_walk = ox.load_graphml("data/seoul_combined2.graphml")
+    G_walk = ox.load_graphml("data\seoul_projection.graphml")
     G_bike = ox.load_graphml("data/seoul_bicycle.graphml")
 
     assign_travel_time(G_walk)
