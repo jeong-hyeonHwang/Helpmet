@@ -1,4 +1,4 @@
-package com.a303.helpmet.di
+package com.a303.helpmet.domain.usecase
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -21,6 +21,8 @@ class GetCellularNetworkUseCase(
 
             cm.requestNetwork(request, object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
+                    // 여기서 전역 바인딩 수행
+                    cm.bindProcessToNetwork(network)
                     cont.resume(network) {}
                 }
 

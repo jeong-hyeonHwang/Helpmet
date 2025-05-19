@@ -38,6 +38,7 @@ class CommandSocketClient : BaseSocketClient() {
                 val bytes = Base64.decode(base64, Base64.DEFAULT)
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 onFrameReceived?.invoke(bitmap)
+                Log.d("MESSAGGGGGGGGGGG", "?????????? ")
             }
         } catch (e: Exception) {
             Log.e("WebSocket", "메시지 파싱 오류", e)

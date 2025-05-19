@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.network.RetrofitProvider
-import com.a303.helpmet.di.GetCellularNetworkUseCase
+import com.a303.helpmet.domain.usecase.GetCellularNetworkUseCase
 import com.a303.helpmet.domain.mapper.toDomain
 import com.a303.helpmet.presentation.mapper.toInstructionList
 import com.a303.helpmet.presentation.mapper.toRouteInfo
