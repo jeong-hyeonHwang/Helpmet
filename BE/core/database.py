@@ -12,5 +12,6 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
+    #transation 설정 제거 (readonly session)
+    session = session.execution_options(isolation_level="AUTOCOMMIT")
+    yield session
