@@ -13,8 +13,8 @@ import com.a303.helpmet.domain.model.RouteSegment
 fun LatLngDto.toDomain() = LatLng(lat, lng)
 
 fun RouteSegmentDto.toDomain() = RouteSegment(
-    from    = from.toDomain(),
-    to      = to.toDomain(),
+    from    = coords[0].toDomain(),
+    to      = coords[1].toDomain(),
     isCycle = isCycle,
     distance = distance
 )
