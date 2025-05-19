@@ -6,10 +6,11 @@ import com.a303.helpmet.data.network.interceptor.ErrorInterceptor
 import com.a303.helpmet.data.repository.DeviceRepository
 import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.data.service.NavigationService
+import com.a303.helpmet.domain.usecase.GetCellularNetworkUseCase
+import com.a303.helpmet.domain.usecase.GetWifiNetworkUseCase
 import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import org.koin.core.qualifier.named
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
 
@@ -65,7 +66,7 @@ val networkModule = module {
 
 
     single { GetCellularNetworkUseCase(get()) } // context 주입 필요
-
+    single { GetWifiNetworkUseCase(get()) }
 }
 
 val fakeNetworkModule = module {
