@@ -8,6 +8,7 @@ import org.koin.dsl.module
 val navigationModule = module {
     viewModel { NavigationViewModel(
         deviceRepository = get(),
-        websocketRepository = get()
+        websocketRepository = get(),
+        getWifiNetworkUseCase = get()
     ) }
 }

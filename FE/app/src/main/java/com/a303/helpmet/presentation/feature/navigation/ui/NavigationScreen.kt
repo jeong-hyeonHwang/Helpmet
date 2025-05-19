@@ -109,7 +109,9 @@ fun NavigationScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        StreamingView()
+        StreamingView(
+            detectionViewModel = detectionViewModel
+        )
 
     // 카메라 뷰 토글 버튼
     Box(
@@ -152,6 +154,7 @@ fun NavigationScreen(
         }
         // 안내 멘트
         StreamingNoticeView(
+            modifier = Modifier.align(Alignment.BottomCenter),
             onFinish,
             routeViewModel = routeViewModel
         )

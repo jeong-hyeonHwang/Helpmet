@@ -1,13 +1,16 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import DeviceProvider
+import android.content.Context
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.repository.DeviceRepository
 import com.a303.helpmet.data.repository.WebsocketRepository
 import com.a303.helpmet.data.service.DeviceService
+import com.a303.helpmet.domain.usecase.GetCellularNetworkUseCase
 import com.a303.helpmet.domain.model.DirectionState
+import com.a303.helpmet.domain.usecase.GetWifiNetworkUseCase
 import com.a303.helpmet.presentation.state.DirectionStateManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +19,8 @@ import kotlinx.coroutines.launch
 
 class NavigationViewModel(
     private val deviceRepository: DeviceRepository,
-    private val websocketRepository: WebsocketRepository
+    private val websocketRepository: WebsocketRepository,
+    private val getWifiNetworkUseCase: GetWifiNetworkUseCase
 ) : ViewModel()  {
     private val _isActiveStreamingView = MutableStateFlow(true)
     val isActiveStreamingView: StateFlow<Boolean> = _isActiveStreamingView
@@ -36,11 +40,14 @@ class NavigationViewModel(
 
     fun validateDevice(baseUrl: String) {
         viewModelScope.launch {
-            val retrofit = DeviceProvider.create(baseUrl)
-            val service = retrofit.create(DeviceService::class.java)
-            val repository = DeviceRepository(service)
+            val retrofit = getWifiNetworkUseCase()
+                ?.let { DeviceProvider.create(baseUrl, it) }
+            val service = retrofit?.create(DeviceService::class.java)
+            val repository = service?.let { DeviceRepository(it) }
 
-            _isValidPi.value = repository.isHelpmetDevice()
+            if (repository != null) {
+                _isValidPi.value = repository.isHelpmetDevice()
+            }
         }
     }
 

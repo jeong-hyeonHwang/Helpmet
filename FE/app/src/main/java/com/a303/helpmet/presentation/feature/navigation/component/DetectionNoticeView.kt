@@ -44,6 +44,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun StreamingNoticeView(
+    modifier: Modifier,
     onFinish: () -> Unit,
     routeViewModel: RouteViewModel
 ) {
@@ -51,7 +52,7 @@ fun StreamingNoticeView(
     val detectedObjectState by DetectionNoticeStateManager.detectedObjectState.collectAsState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(100.dp)
             .background(HelpmetTheme.colors.white1),

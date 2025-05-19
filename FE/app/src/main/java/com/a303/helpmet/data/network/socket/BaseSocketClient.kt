@@ -6,8 +6,9 @@ import android.util.Log
 import kotlinx.serialization.json.JsonObject
 import okhttp3.*
 
-abstract class BaseSocketClient {
-    private val client = OkHttpClient()
+abstract class BaseSocketClient(
+    private var client: OkHttpClient = OkHttpClient()  // ← 기본값은 여전히 있음
+) {
     protected var webSocket: WebSocket? = null
     private var isConnected: Boolean = false
     private var isConnecting = false
@@ -18,13 +19,15 @@ abstract class BaseSocketClient {
     private var lastUrl = ""
     private var lastIp = ""
 
+    // 💡 OkHttpClient를 외부에서 변경 가능하게
+    fun setClient(newClient: OkHttpClient) {
+        this.client = newClient
+    }
 
     open fun connect(url: String, ip: String) {
-        if (isConnected || isConnecting) {
-//            Log.d("WebSocket", "이미 연결되어 있음: 중복 연결 방지 in BSC")
-            return
-        }
-        isConnecting = true;
+        if (isConnected || isConnecting) return
+
+        isConnecting = true
         lastUrl = url
         lastIp = ip
 
@@ -34,35 +37,36 @@ abstract class BaseSocketClient {
         val request = Request.Builder()
             .url(url)
             .build()
+
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
-//                Log.d("WebSocket", "✅ 연결됨: $url  in BSC")
-                isConnected = true;
+                Log.d("WebSocket", "✅ 연결됨: $url  in BSC")
+                isConnected = true
                 isConnecting = false
                 retryCount = 0
                 onOpen(ws)
             }
 
             override fun onMessage(ws: WebSocket, text: String) {
-//                Log.d("WebSocket", "📩 수신 메시지: $text  in BSC")
+                Log.d("WebSocket", "📩 수신 메시지: $text  in BSC")
                 onMessage(text)
             }
 
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-//                Log.e("WebSocket", "❌ 연결 실패: ${t}  in BSC")
+                Log.e("WebSocket", "❌ 연결 실패: ${t}  in BSC")
                 isConnected = false
                 isConnecting = false
-                if(retryCount < maxRetries){
+                if (retryCount < maxRetries) {
                     retryCount++
                     Handler(Looper.getMainLooper()).postDelayed({
                         connect(lastUrl, lastIp)
-                    }, 2000)
+                    }, retryDelay)
                 }
                 onFailure(t)
             }
 
             override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-//                Log.d("WebSocket", "🔌 연결 종료: $reason in BSC")
+                Log.d("WebSocket", "🔌 연결 종료: $reason in BSC")
                 isConnected = false
                 isConnecting = false
                 onClosed()
@@ -72,7 +76,7 @@ abstract class BaseSocketClient {
 
     fun disconnect() {
         if (!isConnected) {
-//            Log.w("WebSocket", "연결되어 있지 않아 메시지 전송 불가  in BSC")
+            Log.w("WebSocket", "연결되어 있지 않아 메시지 전송 불가  in BSC")
             return
         }
         retryCount = 0
@@ -84,14 +88,11 @@ abstract class BaseSocketClient {
     fun sendJson(json: JsonObject) {
         val message = json.toString()
         val success = webSocket?.send(message) ?: false
-        if (success) {
-//            Log.d("WebSocket", "✅ 메시지 전송됨: $message  in BSC")
-        } else {
-//            Log.e("WebSocket", "❌ 메시지 전송 실패  in BSC")
+        if (!success) {
+            Log.e("WebSocket", "❌ 메시지 전송 실패  in BSC")
         }
     }
 
-    // 서브클래스가 구현해야 할 콜백들
     protected open fun onOpen(ws: WebSocket) {}
     protected abstract fun onMessage(text: String)
     protected open fun onFailure(t: Throwable) {}
