@@ -11,11 +11,13 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -166,6 +168,7 @@ fun WebRTCPage(url: String) {
     )
 }
 
+
 fun getWifiNetwork(context: Context): Network? {
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     return cm.allNetworks.firstOrNull { network ->
@@ -173,6 +176,7 @@ fun getWifiNetwork(context: Context): Network? {
         caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
     }
 }
+
 
 fun getCellularNetwork(context: Context): Network? {
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
