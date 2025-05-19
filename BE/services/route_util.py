@@ -60,7 +60,10 @@ def get_nearest_poi(lat, lon, radius=30):
         pois = ox.features_from_point((lat, lon), tags=tags, dist=radius)
         if "name" in pois.columns and not pois.empty:
             pois = pois[pois["name"].notna()]
-            pois["centroid"] = pois.geometry.centroid
+
+            pois_proj = pois.to_crs(epsg=3857)
+            pois["centroid"] = pois_proj.geometry.centroid.to_crs(epsg=4326)
+
             pois["distance"] = pois["centroid"].apply(
                 lambda p: ((lat - p.y)**2 + (lon - p.x)**2)**0.5
             )
