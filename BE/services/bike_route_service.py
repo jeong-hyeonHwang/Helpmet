@@ -101,7 +101,6 @@ async def select_best_bike_station_by_walk(
     return None
 
 async def find_full_route(db, request, lat : float, lon : float, max_minutes : int):
-    # G_bike = request.app.state.G_bike
     G_walk = request.app.state.G_walk
 
     bike_route = await find_bike_route(db, lat, lon, max_minutes, G_walk)
