@@ -30,9 +30,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
+import com.a303.helpmet.domain.model.DetectedObjectState
 import com.a303.helpmet.domain.model.StreamingNoticeState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
+import com.a303.helpmet.presentation.state.DetectionStateManager
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.extension.trimLocationName
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
@@ -48,7 +50,8 @@ fun StreamingNoticeView(
     navigationViewModel: NavigationViewModel,
     routeViewModel: RouteViewModel
 ) {
-    val noticeState by navigationViewModel.noticeState.collectAsState()
+    val noticeState by DetectionStateManager.noticeState.collectAsState()
+    val detectedObjectState by DetectionStateManager.detectedObjectState.collectAsState()
 
     Box(
         modifier = Modifier
@@ -71,8 +74,8 @@ fun StreamingNoticeView(
 
         when (noticeState) {
             StreamingNoticeState.Default -> DefaultNotice(routeViewModel)
-            StreamingNoticeState.Caution -> CautionNotice()
-            StreamingNoticeState.Danger -> DangerNotice()
+            StreamingNoticeState.Caution -> CautionNotice(detectedObjectState)
+            StreamingNoticeState.Danger -> DangerNotice(detectedObjectState)
         }
 
 
@@ -140,7 +143,9 @@ fun DefaultNotice(
 }
 
 @Composable
-fun CautionNotice() {
+fun CautionNotice(
+    detectedObjectState: DetectedObjectState,
+) {
     val alpha by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
         targetValue = 0.5f,
@@ -156,12 +161,14 @@ fun CautionNotice() {
             .background(Color.Yellow.copy(alpha = alpha)),
         contentAlignment = Alignment.Center
     ) {
-        Text(text= stringResource(R.string.rear_caution, appendSubjectPostposition("자동차")), color = Color.Black)
+        Text(text= stringResource(R.string.rear_caution, appendSubjectPostposition(detectedObjectState.toKorean())), color = Color.Black)
     }
 }
 
 @Composable
-fun DangerNotice() {
+fun DangerNotice(
+    detectedObjectState: DetectedObjectState,
+) {
     val alpha by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
         targetValue = 0.5f,
@@ -177,7 +184,7 @@ fun DangerNotice() {
             .background(Color(0xFFFFC0CB).copy(alpha = alpha)),
         contentAlignment = Alignment.Center
     ) {
-        Text(text= stringResource(R.string.rear_danger, appendObjectPostposition("사람")), color = Color.Black)
+        Text(text= stringResource(R.string.rear_danger, appendObjectPostposition(detectedObjectState.toKorean())), color = Color.Black)
     }
 
 }
