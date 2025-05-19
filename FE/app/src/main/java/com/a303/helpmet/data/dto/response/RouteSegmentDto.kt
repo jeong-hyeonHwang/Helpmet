@@ -6,11 +6,8 @@ import kotlinx.serialization.Serializable
 // 구간별 경로(segments)
 @Serializable
 data class RouteSegmentDto(
-    @SerialName("from_")
-    val from: LatLngDto,
-
-    @SerialName("to")
-    val to: LatLngDto,
+    @SerialName("coords")
+    val coords: List<LatLngDto>,
 
     @SerialName("is_cycleway")
     val isCycle: Boolean,
