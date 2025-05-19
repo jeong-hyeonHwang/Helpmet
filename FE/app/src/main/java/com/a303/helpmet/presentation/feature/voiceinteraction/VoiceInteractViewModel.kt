@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.domain.usecase.SendDirectionCommandUseCase
-import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.voiceinteraction.sound.TickSoundManager
 import com.a303.helpmet.presentation.feature.voiceinteraction.usecase.*
 import com.a303.helpmet.presentation.feature.voiceinteraction.util.UserReplyResponse
@@ -18,16 +17,29 @@ import com.a303.helpmet.util.postPosition.appendAdverbialPostposition
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
 import com.kakao.vectormap.LatLng
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class VoiceInteractViewModel(
     application: Application,
     private val navigateToPlace: NavigateToPlaceUseCase,
-    private val endGuide: EndGuideUseCase,
     private val sendDirectionCommandUseCase: SendDirectionCommandUseCase,
 ) : AndroidViewModel(application) {
+    // 안내 종료 시 맵의 상태를 다 제거
+    private val _onGuideEnd = MutableSharedFlow<Unit>()
+    val onGuideEnd: SharedFlow<Unit> get() = _onGuideEnd
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> get() = _isLoading
+
+    fun requestGuideEnd() {
+        viewModelScope.launch {
+            _onGuideEnd.emit(Unit)
+        }
+    }
 
     private val tickSoundManager = TickSoundManager(
         context = application.applicationContext,
@@ -92,7 +104,9 @@ class VoiceInteractViewModel(
         }
 
         viewModelScope.launch {
+            _isLoading.value = true
             val result = navigateToPlace.invoke(context, pos, placeType)
+            _isLoading.value = false
             if (result != null) {
                 onRouteUpdate?.invoke(result)
                 speak("${appendAdverbialPostposition(placeTypeToKor(placeType))} 안내를 시작합니다.")
@@ -106,6 +120,12 @@ class VoiceInteractViewModel(
         "toilet" -> "주변 화장실"
         "rental" -> "주변 대여소"
         else -> ""
+    }
+
+    fun setEndGuideContext(){
+        turnOnOffSignal(DirectionState.None)
+        promptContext = VoicePromptContext.EndGuide
+        speak(context.getString(R.string.voice_arrival_destination_message))
     }
 
     private fun handleVoiceInput(text: String) {
@@ -126,8 +146,8 @@ class VoiceInteractViewModel(
                 }
                 UserReplyResponse.negativeResponses.any { it in text } -> {
                     if (promptContext is VoicePromptContext.EndGuide) {
-                        speak(context.getString(R.string.voice_guide_end_message), autoStartListening = false)
-                        endGuide()
+                        requestGuideEnd()
+                        speak(context.getString(R.string.voice_guide_end_message))
                     }
                 }
             }
@@ -190,5 +210,6 @@ class VoiceInteractViewModel(
         DirectionStateManager.update(DirectionState.None)
         voiceHandler.destroy()
         tickSoundManager.releaseAll()
+        onRouteUpdate = null
     }
 }

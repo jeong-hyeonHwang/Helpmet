@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -18,12 +19,14 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.a303.helpmet.domain.extension.isApproaching
+import com.a303.helpmet.domain.extension.isNear
 import com.a303.helpmet.domain.model.Action
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.presentation.feature.navigation.usecase.AdjustCameraUseCase
 import com.a303.helpmet.presentation.feature.navigation.usecase.UpdateUserPositionShapesUseCase
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
+import com.a303.helpmet.presentation.feature.preride.component.RouteMapLoadingView
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.a303.helpmet.presentation.model.LatLngUi
 import com.a303.helpmet.presentation.model.TurnState
@@ -33,6 +36,7 @@ import com.kakao.vectormap.camera.CameraAnimation
 import com.kakao.vectormap.camera.CameraUpdateFactory
 import com.kakao.vectormap.route.RouteLineLayer
 import com.kakao.vectormap.shape.ShapeLayer
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import java.lang.Exception
 
@@ -54,6 +58,7 @@ fun MapScreen(
     val position by userPositionViewModel.position.collectAsState()
     val heading by userPositionViewModel.heading.collectAsState()
     val routeOption by routeViewModel.routeLineOptions.collectAsState()
+    val destination by routeViewModel.destination.collectAsState()
 
     val isVoiceReady by voiceViewModel.isVoiceReady.collectAsState()
 
@@ -61,6 +66,10 @@ fun MapScreen(
     var kakaoMap by remember { mutableStateOf<KakaoMap?>(null) }
     var routeLineLayer by remember { mutableStateOf<RouteLineLayer?>(null) }
     var shapeLayer by remember { mutableStateOf<ShapeLayer?>(null) }
+    var hasEnded by remember { mutableStateOf(false) }
+
+    // 새로운 경로를 탐색하는 중을 나타내는 상태 변수
+    val isLoading by voiceViewModel.isLoading.collectAsState()
 
     var hasLocPerm by remember {
         mutableStateOf(
@@ -78,6 +87,13 @@ fun MapScreen(
     var expectedHeading by remember { mutableStateOf<Float?>(null) }
     var listenerRegistered by remember { mutableStateOf(false) }
 
+    fun handleGuideEnd(){
+        routeLineLayer?.removeAll()
+        routeViewModel.routeLine = null
+        turnState = TurnState.IDLE
+        expectedHeading = null
+    }
+
     LaunchedEffect(Unit) {
         routeViewModel.loadFromCache()
         if (!hasLocPerm) permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -86,6 +102,7 @@ fun MapScreen(
             voiceViewModel.setOnRouteUpdateListener { result ->
                 routeViewModel.setRouteOption(result.routeOptions)
                 routeViewModel.setInstructionList(result.instructionList)
+                hasEnded = false
             }
             listenerRegistered = true
         }
@@ -101,6 +118,7 @@ fun MapScreen(
     }
 
     LaunchedEffect(routeOption) {
+        hasEnded = false
         val layer = routeLineLayer
         val map = kakaoMap
         val option = routeOption
@@ -136,70 +154,77 @@ fun MapScreen(
         }
     }
     */
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { ctx ->
+                MapView(ctx).apply {
+                    lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
+                        override fun onResume(owner: LifecycleOwner) = resume()
+                        override fun onPause(owner: LifecycleOwner) = pause()
+                        override fun onDestroy(owner: LifecycleOwner) = finish()
+                    })
+                    mapViewRef = this
 
-    AndroidView(
-        factory = { ctx ->
-            MapView(ctx).apply {
-                lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
-                    override fun onResume(owner: LifecycleOwner) = resume()
-                    override fun onPause(owner: LifecycleOwner) = pause()
-                    override fun onDestroy(owner: LifecycleOwner) = finish()
-                })
-                mapViewRef = this
+                    start(
+                        object : MapLifeCycleCallback() {
+                            override fun onMapDestroy() {}
 
-                start(
-                    object : MapLifeCycleCallback() {
-                        override fun onMapDestroy() { }
+                            override fun onMapError(p0: Exception?) {}
+                        },
+                        object : KakaoMapReadyCallback() {
+                            override fun onMapReady(map: KakaoMap) {
+                                kakaoMap = map
+                                shapeLayer = map.shapeManager?.getLayer()
+                                routeLineLayer = map.routeLineManager?.getLayer()
 
-                        override fun onMapError(p0: Exception?) { }
-                    },
-                    object : KakaoMapReadyCallback() {
-                        override fun onMapReady(map: KakaoMap) {
-                            kakaoMap = map
-                            shapeLayer = map.shapeManager?.getLayer()
-                            routeLineLayer = map.routeLineManager?.getLayer()
+                                routeOption?.let { opts ->
+                                    val routeLine = routeLineLayer!!.addRouteLine(opts)
+                                    routeViewModel.routeLine = routeLine
 
-                            routeOption?.let { opts ->
-                                val routeLine = routeLineLayer!!.addRouteLine(opts)
-                                routeViewModel.routeLine = routeLine
+                                    val allPoints = opts.segments.flatMap { it.points }
+                                    val lats = allPoints.map { it.latitude }
+                                    val lons = allPoints.map { it.longitude }
 
-                                val allPoints = opts.segments.flatMap { it.points }
-                                val lats = allPoints.map { it.latitude }
-                                val lons = allPoints.map { it.longitude }
+                                    val bounds = LatLngBounds(
+                                        LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
+                                        LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
+                                    )
 
-                                val bounds = LatLngBounds(
-                                    LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
-                                    LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
-                                )
-
-                                val update = CameraUpdateFactory.fitMapPoints(bounds, 100)
-                                map.moveCamera(update, CameraAnimation.from(500))
+                                    val update = CameraUpdateFactory.fitMapPoints(bounds, 100)
+                                    map.moveCamera(update, CameraAnimation.from(500))
+                                }
                             }
+
+                            override fun getZoomLevel(): Int = defaultZoom
+                            override fun getPosition(): LatLng = LatLng.from(0.0, 0.0)
                         }
-
-                        override fun getZoomLevel(): Int = defaultZoom
-                        override fun getPosition(): LatLng = LatLng.from(0.0, 0.0)
-                    }
-                )
-            }
-        },
-        update = {
-            routeLineLayer?.apply {
-                removeAll()
-                routeOption?.let { addRouteLine(it) }
-            }
-        },
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInteropFilter {
-                if (it.action == MotionEvent.ACTION_DOWN) {
-                    userPositionViewModel.setUserInteracting(true)
+                    )
                 }
-                mapViewRef?.dispatchTouchEvent(it)
-                true
-            }
-    )
+            },
+            update = {
+                routeLineLayer?.apply {
+                    removeAll()
+                    routeOption?.let { addRouteLine(it) }
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInteropFilter {
+                    if (it.action == MotionEvent.ACTION_DOWN) {
+                        userPositionViewModel.setUserInteracting(true)
+                    }
+                    mapViewRef?.dispatchTouchEvent(it)
+                    true
+                }
+        )
 
+        if(isLoading){
+            RouteMapLoadingView(
+                message = "경로를 탐색중입니다.",
+                isBackgroundBlack = false
+            )
+        }
+    }
     // 4) 사용자 따라가기
     LaunchedEffect(followUser, position, heading) {
         if (!isVoiceReady) return@LaunchedEffect
@@ -283,6 +308,14 @@ fun MapScreen(
                         }
                     }
                 }
+
+                destination?.location?.let{ loc ->
+                    if(!hasEnded && position.isNear(loc, threshold = 25.0)){
+                        hasEnded = true
+                        voiceViewModel.setEndGuideContext()
+                        handleGuideEnd()
+                    }
+                }
             }
     }
 
@@ -294,4 +327,15 @@ fun MapScreen(
                 routeViewModel.setUserPositionAndUpdateProgress(pos)
             }
     }
+
+    LaunchedEffect(true) {
+        voiceViewModel.onGuideEnd.collect {
+            if (!hasEnded) {
+                hasEnded = true
+                handleGuideEnd()
+            }
+        }
+    }
+
+
 }

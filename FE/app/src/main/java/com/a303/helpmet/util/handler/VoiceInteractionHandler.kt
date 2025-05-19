@@ -35,7 +35,6 @@ class VoiceInteractionHandler(private val context: Context){
 
     // STT 초기화
     private fun initSpeechRecognizer(){
-        Log.d("hyewon", "stt init")
         if(!SpeechRecognizer.isRecognitionAvailable(context)){
             return
         }
