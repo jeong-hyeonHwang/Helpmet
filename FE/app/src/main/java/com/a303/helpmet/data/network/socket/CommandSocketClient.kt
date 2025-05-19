@@ -6,6 +6,7 @@ import android.util.Base64
 import android.util.Log
 import com.a303.helpmet.domain.model.command.DetectionCommand
 import com.a303.helpmet.domain.model.command.DirectionCommand
+import com.a303.helpmet.presentation.state.detection.PiAccessManager
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
@@ -38,6 +39,9 @@ class CommandSocketClient : BaseSocketClient() {
                 val bytes = Base64.decode(base64, Base64.DEFAULT)
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 onFrameReceived?.invoke(bitmap)
+            }
+            if (type == "speaking") {
+                PiAccessManager.updateSpeakingState(jsonObject.optBoolean("is_speaking"))
             }
         } catch (e: Exception) {
             Log.e("WebSocket", "메시지 파싱 오류", e)

@@ -1,4 +1,4 @@
-package com.a303.helpmet.presentation.state
+package com.a303.helpmet.presentation.state.detection
 
 import com.a303.helpmet.domain.model.DetectedObjectState
 import com.a303.helpmet.domain.model.DetectionNoticeState
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
-object DetectionStateManager {
+object DetectionNoticeStateManager {
     private val _noticeState = MutableStateFlow(DetectionNoticeState.Default)
     val noticeState: StateFlow<DetectionNoticeState> = _noticeState
 
