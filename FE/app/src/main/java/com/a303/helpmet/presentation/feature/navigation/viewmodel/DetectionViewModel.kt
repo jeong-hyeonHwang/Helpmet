@@ -114,7 +114,6 @@ class DetectionViewModel(
                         1 -> "BICYCLE_DETECTED"
                         else -> "CAR_DETECTED"
                     }
-                    Log.d("CMDCMDCMDCMDCMD", "detectAndSend: $label $type")
                     val command = DetectionCommand(type = type, level = level, message = label)
                     websocketRepository.sendDetectionCommand(command)
                     DetectionNoticeStateManager.updateNoticeState(type, level)

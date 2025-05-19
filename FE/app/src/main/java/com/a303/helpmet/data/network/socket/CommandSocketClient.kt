@@ -39,7 +39,6 @@ class CommandSocketClient : BaseSocketClient() {
                 val bytes = Base64.decode(base64, Base64.DEFAULT)
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                 onFrameReceived?.invoke(bitmap)
-                Log.d("MESSAGGGGGGGGGGG", "?????????? ")
             }
             if (type == "speaking") {
                 PiAccessManager.updateSpeakingState(jsonObject.optBoolean("is_speaking"))
