@@ -32,9 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DetectedObjectState
 import com.a303.helpmet.domain.model.DetectionNoticeState
-import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
-import com.a303.helpmet.presentation.state.DetectionStateManager
+import com.a303.helpmet.presentation.state.detection.DetectionNoticeStateManager
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.extension.trimLocationName
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
@@ -48,8 +47,8 @@ fun StreamingNoticeView(
     onFinish: () -> Unit,
     routeViewModel: RouteViewModel
 ) {
-    val noticeState by DetectionStateManager.noticeState.collectAsState()
-    val detectedObjectState by DetectionStateManager.detectedObjectState.collectAsState()
+    val noticeState by DetectionNoticeStateManager.noticeState.collectAsState()
+    val detectedObjectState by DetectionNoticeStateManager.detectedObjectState.collectAsState()
 
     Box(
         modifier = Modifier
