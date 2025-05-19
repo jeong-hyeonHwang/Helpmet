@@ -20,18 +20,19 @@ async def fetch_nearby_bike_stations(
     result = await db.execute(query)
     return result.scalars().all()
 
-async def fetch_closest_bike_station(
+async def fetch_top_n_bike_stations(
     db: AsyncSession,
     lat: float,
-    lon: float
-) -> BikeStation | None:
+    lon: float,
+    limit: int = 3
+) -> list[BikeStation]:
     user_point = from_shape(Point(lon, lat), srid=4326)
 
     query = (
         select(BikeStation)
         .order_by(ST_Distance(BikeStation.geom, user_point))
-        .limit(1)
+        .limit(limit)
     )
 
     result = await db.execute(query)
-    return result.scalar_one_or_none()
+    return result.scalars().all()
