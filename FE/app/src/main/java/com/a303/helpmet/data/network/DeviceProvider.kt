@@ -1,3 +1,4 @@
+import android.net.Network
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -18,19 +19,20 @@ object DeviceProvider {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    private fun provideOkHttpClient(): OkHttpClient {
+    private fun provideOkHttpClient(network: Network): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .socketFactory(network.socketFactory) // <-- 핵심
             .build()
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun create(baseUrl: String): Retrofit {
+    fun create(baseUrl: String, network: Network): Retrofit {
         val contentType = "application/json".toMediaType()
 
         return Retrofit.Builder()
             .baseUrl(baseUrl)
-            .client(provideOkHttpClient())
+            .client(provideOkHttpClient(network))
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
     }
