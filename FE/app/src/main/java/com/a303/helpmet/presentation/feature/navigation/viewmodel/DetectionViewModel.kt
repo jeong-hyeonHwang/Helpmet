@@ -14,7 +14,8 @@ import com.a303.helpmet.data.ml.detector.YoloV5TFLiteDetector
 import com.a303.helpmet.data.ml.tracker.SimpleTracker
 import com.a303.helpmet.data.repository.WebsocketRepository
 import com.a303.helpmet.domain.model.command.DetectionCommand
-import com.a303.helpmet.presentation.state.DetectionStateManager
+import com.a303.helpmet.presentation.state.detection.DetectionNoticeStateManager
+import com.a303.helpmet.presentation.state.detection.PiAccessManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,6 +105,8 @@ class DetectionViewModel(
 
             matched?.let { result ->
                 if (level > prevLevel) {
+                    if(PiAccessManager.isSpeaking.value) return@forEach
+
                     _lastWarningLevels[trackId] = level
                     val label = classDictionary[result.classId] ?: "미확인"
                     val type = when (result.classId) {
@@ -114,7 +117,7 @@ class DetectionViewModel(
                     Log.d("CMDCMDCMDCMDCMD", "detectAndSend: $label $type")
                     val command = DetectionCommand(type = type, level = level, message = label)
                     websocketRepository.sendDetectionCommand(command)
-                    DetectionStateManager.updateNoticeState(type, level)
+                    DetectionNoticeStateManager.updateNoticeState(type, level)
                 }
             }
         }
