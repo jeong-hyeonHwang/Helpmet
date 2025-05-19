@@ -28,11 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DetectedObjectState
-import com.a303.helpmet.domain.model.StreamingNoticeState
+import com.a303.helpmet.domain.model.DetectionNoticeState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.state.DetectionStateManager
@@ -40,7 +39,6 @@ import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.extension.trimLocationName
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
 import com.a303.helpmet.util.postPosition.appendSubjectPostposition
-import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -48,7 +46,6 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun StreamingNoticeView(
     onFinish: () -> Unit,
-    navigationViewModel: NavigationViewModel,
     routeViewModel: RouteViewModel
 ) {
     val noticeState by DetectionStateManager.noticeState.collectAsState()
@@ -73,9 +70,9 @@ fun StreamingNoticeView(
 
 
         when (noticeState) {
-            StreamingNoticeState.Default -> DefaultNotice(routeViewModel)
-            StreamingNoticeState.Caution -> CautionNotice(detectedObjectState)
-            StreamingNoticeState.Danger -> DangerNotice(detectedObjectState)
+            DetectionNoticeState.Default -> DefaultNotice(routeViewModel)
+            DetectionNoticeState.Caution -> CautionNotice(detectedObjectState)
+            DetectionNoticeState.Danger -> DangerNotice(detectedObjectState)
         }
 
 

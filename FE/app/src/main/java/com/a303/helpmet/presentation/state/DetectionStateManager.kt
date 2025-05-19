@@ -1,7 +1,7 @@
 package com.a303.helpmet.presentation.state
 
 import com.a303.helpmet.domain.model.DetectedObjectState
-import com.a303.helpmet.domain.model.StreamingNoticeState
+import com.a303.helpmet.domain.model.DetectionNoticeState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -12,8 +12,8 @@ import kotlinx.coroutines.launch
 
 
 object DetectionStateManager {
-    private val _noticeState = MutableStateFlow(StreamingNoticeState.Default)
-    val noticeState: StateFlow<StreamingNoticeState> = _noticeState
+    private val _noticeState = MutableStateFlow(DetectionNoticeState.Default)
+    val noticeState: StateFlow<DetectionNoticeState> = _noticeState
 
     private val _detectedObjectState = MutableStateFlow(DetectedObjectState.Default)
     val detectedObjectState: StateFlow<DetectedObjectState> = _detectedObjectState
@@ -25,22 +25,22 @@ object DetectionStateManager {
         _detectedObjectState.value = setType(type)
         val newNotice = setLevel(level)
 
-        if (newNotice == StreamingNoticeState.Danger || newNotice == StreamingNoticeState.Caution) {
+        if (newNotice == DetectionNoticeState.Danger || newNotice == DetectionNoticeState.Caution) {
             noticeResetJob?.cancel()
             _noticeState.value = newNotice
 
             noticeResetJob = CoroutineScope(Dispatchers.Default).launch {
                 delay(5000)
-                _noticeState.value = StreamingNoticeState.Default
+                _noticeState.value = DetectionNoticeState.Default
             }
         }
     }
 
-    private fun setLevel(level: Int?): StreamingNoticeState {
+    private fun setLevel(level: Int?): DetectionNoticeState {
         return when (level) {
-            1 -> StreamingNoticeState.Caution
-            2 -> StreamingNoticeState.Danger
-            else -> StreamingNoticeState.Default
+            1 -> DetectionNoticeState.Caution
+            2 -> DetectionNoticeState.Danger
+            else -> DetectionNoticeState.Default
         }
     }
 

@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class StreamingNoticeState {
+enum class DetectionNoticeState {
     @SerialName("default") Default,
     @SerialName("caution") Caution,
     @SerialName("danger") Danger,
@@ -23,7 +23,7 @@ enum class DetectedObjectState : Displayable {
     @SerialName("NULL") Default;
 
     override fun toKorean(): String = when (this) {
-        Person   -> "사람"
+        Person   -> "보행자"
         Bicycle  -> "자전거"
         Car      -> "자동차"
         Default  -> "없음"
