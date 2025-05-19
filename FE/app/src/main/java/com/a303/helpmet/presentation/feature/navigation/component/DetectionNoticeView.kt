@@ -30,14 +30,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.a303.helpmet.R
-import com.a303.helpmet.domain.model.StreamingNoticeState
+import com.a303.helpmet.domain.model.DetectedObjectState
+import com.a303.helpmet.domain.model.DetectionNoticeState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
+import com.a303.helpmet.presentation.state.DetectionStateManager
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.extension.trimLocationName
 import com.a303.helpmet.util.postPosition.appendObjectPostposition
 import com.a303.helpmet.util.postPosition.appendSubjectPostposition
-import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -45,10 +46,10 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun StreamingNoticeView(
     onFinish: () -> Unit,
-    navigationViewModel: NavigationViewModel,
     routeViewModel: RouteViewModel
 ) {
-    val noticeState by navigationViewModel.noticeState.collectAsState()
+    val noticeState by DetectionStateManager.noticeState.collectAsState()
+    val detectedObjectState by DetectionStateManager.detectedObjectState.collectAsState()
 
     Box(
         modifier = Modifier
@@ -61,18 +62,17 @@ fun StreamingNoticeView(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
-            ,
+                .padding(10.dp),
             contentAlignment = Alignment.CenterEnd
-        ){
+        ) {
             NavigationMoreButton(onFinish)
         }
 
 
         when (noticeState) {
-            StreamingNoticeState.Default -> DefaultNotice(routeViewModel)
-            StreamingNoticeState.Caution -> CautionNotice()
-            StreamingNoticeState.Danger -> DangerNotice()
+            DetectionNoticeState.Default -> DefaultNotice(routeViewModel)
+            DetectionNoticeState.Caution -> CautionNotice(detectedObjectState)
+            DetectionNoticeState.Danger -> DangerNotice(detectedObjectState)
         }
 
 
@@ -99,13 +99,13 @@ fun DefaultNotice(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            ){
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_util_direction_arrow),
                 contentDescription = "시간 감소",
@@ -115,7 +115,7 @@ fun DefaultNotice(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            routeInfo?.endLocationName?.let { Text(text= it.trimLocationName()) }
+            routeInfo?.endLocationName?.let { Text(text = it.trimLocationName()) }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -124,13 +124,13 @@ fun DefaultNotice(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
-        ){
-            Text(text= estimatedArrivalTime)
+        ) {
+            Text(text = estimatedArrivalTime)
 
             Spacer(modifier = Modifier.width(50.dp))
 
             routeInfo?.distanceKm?.let {
-                Text(text= stringResource(R.string.course_distance, it))
+                Text(text = stringResource(R.string.course_distance, it))
             }
 
         }
@@ -140,7 +140,9 @@ fun DefaultNotice(
 }
 
 @Composable
-fun CautionNotice() {
+fun CautionNotice(
+    detectedObjectState: DetectedObjectState,
+) {
     val alpha by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
         targetValue = 0.5f,
@@ -156,12 +158,36 @@ fun CautionNotice() {
             .background(Color.Yellow.copy(alpha = alpha)),
         contentAlignment = Alignment.Center
     ) {
-        Text(text= stringResource(R.string.rear_caution, appendSubjectPostposition("자동차")), color = Color.Black)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_util_caution),
+                contentDescription = "주의",
+                tint = HelpmetTheme.colors.yellow1,
+                modifier = Modifier.size(36.dp)
+            )
+
+            Text(
+                text = stringResource(
+                    R.string.rear_caution,
+                    appendSubjectPostposition(detectedObjectState.toKorean())
+                ),
+                style = HelpmetTheme.typography.title,
+                color = Color.Black
+
+
+            )
+        }
     }
 }
 
 @Composable
-fun DangerNotice() {
+fun DangerNotice(
+    detectedObjectState: DetectedObjectState,
+) {
     val alpha by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
         targetValue = 0.5f,
@@ -171,13 +197,32 @@ fun DangerNotice() {
         )
     )
 
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFFC0CB).copy(alpha = alpha)),
         contentAlignment = Alignment.Center
     ) {
-        Text(text= stringResource(R.string.rear_danger, appendObjectPostposition("사람")), color = Color.Black)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_util_caution),
+                contentDescription = "위험",
+                tint = HelpmetTheme.colors.red1,
+                modifier = Modifier.size(36.dp)
+            )
+            Text(
+                text = stringResource(
+                    R.string.rear_danger,
+                    appendObjectPostposition(detectedObjectState.toKorean())
+                ),
+                style = HelpmetTheme.typography.title,
+                color = Color.Black
+            )
+        }
     }
-
 }

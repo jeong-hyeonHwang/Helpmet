@@ -5,7 +5,11 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val detectionModule = module {
-    viewModel { DetectionViewModel(
-        application= get(),
-        websocketRepository = get()) }
+    viewModel {
+        DetectionViewModel(
+            application = get(),
+            websocketRepository = get()
+        )
+    }
+
 }

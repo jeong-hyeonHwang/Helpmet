@@ -153,7 +153,6 @@ fun NavigationScreen(
         // 안내 멘트
         StreamingNoticeView(
             onFinish,
-            navigationViewModel = navigationViewModel,
             routeViewModel = routeViewModel
         )
     }
