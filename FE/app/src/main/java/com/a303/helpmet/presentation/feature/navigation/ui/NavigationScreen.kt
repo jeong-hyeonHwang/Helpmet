@@ -154,6 +154,7 @@ fun NavigationScreen(
         }
         // 안내 멘트
         StreamingNoticeView(
+            modifier = Modifier.align(Alignment.BottomCenter),
             onFinish,
             routeViewModel = routeViewModel
         )
