@@ -1,20 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from geoalchemy2.functions import ST_Distance
-from geoalchemy2.shape import from_shape
-from shapely.geometry import Point
 from core.models import ExitNode, EntryNode
+from sqlalchemy import text
 
 async def fetch_closest_entry_node(
     db: AsyncSession,
     lat: float,
     lon: float
 ) -> EntryNode | None:
-    user_point = from_shape(Point(lon, lat), srid=4326)
-
     query = (
         select(EntryNode)
-        .order_by(ST_Distance(EntryNode.geom_point, user_point))
+        .order_by(text("geom_point <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)"))
         .limit(1)
     )
 
@@ -26,11 +22,9 @@ async def fetch_closest_exit_node(
     lat: float,
     lon: float
 ) -> ExitNode | None:
-    user_point = from_shape(Point(lon, lat), srid=4326)
-
     query = (
         select(ExitNode)
-        .order_by(ST_Distance(ExitNode.geom_point, user_point))
+        .order_by(text("geom_point <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)"))
         .limit(1)
     )
 
