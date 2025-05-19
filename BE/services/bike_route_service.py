@@ -4,7 +4,6 @@ from typing import Optional, Tuple
 
 from core.models import BicycleStation
 from services.route_service import build_response_from_route
-# from crud.bike_station import fetch_top_n_bike_stations
 from crud.bicycle_station import fetch_top_n_bike_stations
 from crud.bike_connect import fetch_closest_entry_node
 from services.route_util import route_nodes
@@ -130,7 +129,7 @@ async def find_full_route(db, request, lat : float, lon : float, max_minutes : i
 
     return result
 
-def build_combined_response(walk_result1 : RouteResponseDto, bike_result : RouteResponseDto, walk_result2 : RouteResponseDto) -> RouteResponseDto:
+def build_combined_response(walk_result1: RouteResponseDto, bike_result: RouteResponseDto, walk_result2: RouteResponseDto) -> RouteResponseDto:
     total_distance = round(
         walk_result1.distance_m +
         bike_result.distance_m +
@@ -143,41 +142,34 @@ def build_combined_response(walk_result1 : RouteResponseDto, bike_result : Route
         walk_result2.estimated_time_sec
     )
 
-    # 구간 합치기 (RouteSegment 객체 리스트)
     all_segments = walk_result1.route + bike_result.route + walk_result2.route
 
-    # 지시문 index 오프셋 계산
     offset1 = len(walk_result1.instructions)
     offset2 = offset1 + len(bike_result.instructions)
 
-    # 지시문 합치기 (Instruction 객체 리스트)
-    all_instructions_raw = (
+    all_instructions = (
         walk_result1.instructions +
-        [
-            Instruction(
-                index=instr.index + offset1,
-                location=instr.location,
-                distance_m=instr.distance_m,
-                action=instr.action,
-                message=instr.message
-            ) for instr in bike_result.instructions
-        ] +
-        [
-            Instruction(
-                index=instr.index + offset2,
-                location=instr.location,
-                distance_m=instr.distance_m,
-                action=instr.action,
-                message=instr.message
-            ) for instr in walk_result2.instructions
-        ]
+        [Instruction.model_construct(
+            index=instr.index + offset1,
+            location=instr.location,
+            distance_m=instr.distance_m,
+            action=instr.action,
+            message=instr.message
+        ) for instr in bike_result.instructions] +
+        [Instruction.model_construct(
+            index=instr.index + offset2,
+            location=instr.location,
+            distance_m=instr.distance_m,
+            action=instr.action,
+            message=instr.message
+        ) for instr in walk_result2.instructions]
     )
 
-    return RouteResponseDto(
+    return RouteResponseDto.model_construct(
         start_addr=walk_result1.start_addr,
-        end_addr=walk_result2.end_addr, 
+        end_addr=walk_result2.end_addr,
         distance_m=total_distance,
         estimated_time_sec=total_time,
         route=all_segments,
-        instructions=all_instructions_raw
+        instructions=all_instructions
     )
