@@ -3,7 +3,7 @@ from typing import List
 import traceback
 from enums.placeType import PlaceType
 from services.route_service import find_route, build_response_from_route
-from services.bike_route_service import find_full_route
+from services.bike_route_service import find_full_routes
 
 from core.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,8 +42,8 @@ async def get_bike_from_nearest(
     db: AsyncSession = Depends(get_db),
     request: Request = None
 ):
-    result = await find_full_route(db, request, lat, lon, max_minutes)
-    return BaseResponse(status=200, message="success", data=[result])
+    result = await find_full_routes(db, request, lat, lon, max_minutes)
+    return BaseResponse(status=200, message="success", data=result)
     
 @router.get("/nearby", response_model=BaseResponse[RouteResponseDto])
 async def get_bike_from_nearest(
