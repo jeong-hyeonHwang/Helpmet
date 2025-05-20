@@ -2,13 +2,16 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.database import engine, Base
-from core.graph import load_graphs
+from core.graph import load_graphs, load_pois
 from api import route
 from core.exception_handlers import register_exception_handlers
 from services.logger import setup_logger
 import logging
 
 logger = logging.getLogger("main")
+
+PLACE = "Seoul, South Korea"
+TAGS = {"amenity": True, "shop": True, "tourism": True, "building": True}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +22,8 @@ async def lifespan(app: FastAPI):
 
     load_graphs(app)
     logger.info("✓ Graph loaded and attached to app.state.graph")
+    load_pois(app, place_name=PLACE, tags=TAGS)
+    logger.info("✓ Features loaded")
     
     yield
     
