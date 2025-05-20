@@ -43,7 +43,7 @@ def _cumulative_distances(G, route):
         cum.append(cum[-1] + edge_length(G, n1, n2))
     return cum
 
-def _turn_instructions(G, route, coords, cum_dist):
+def _turn_instructions(POIs, G, route, coords, cum_dist):
     turns, turn_idxs = [], []
     for i in range(1, len(coords) - 1):
         angle, action = calculate_angle(coords[i - 1], coords[i], coords[i + 1])
@@ -58,7 +58,7 @@ def _turn_instructions(G, route, coords, cum_dist):
             location=Coordinate.model_construct(lat=lat, lon=lon),
             distance_m=distance,
             action=action,
-            message=build_instruction_message(G, route[i], action, distance, lat, lon)
+            message=build_instruction_message(POIs, G, route[i], action, distance, lat, lon)
         )
         turns.append(instruction)
         turn_idxs.append(i)
@@ -86,14 +86,14 @@ def find_route(G, from_lat, from_lon, to_lat, to_lon):
     route = route_nodes(G, from_node, to_node)
     return route
 
-def build_response_from_route(G , route) -> RouteResponseDto:
+def build_response_from_route(POIs, G , route) -> RouteResponseDto:
     coords = [(G.nodes[n]["y"], G.nodes[n]["x"]) for n in route]
     cum_dist = _cumulative_distances(G, route)
     total_len = cum_dist[-1]
     est_time = int((total_len / 1000) / 15 * 3600)
 
     segments = _build_route_segments(G, route)
-    turn_instr, turn_idx = _turn_instructions(G, route, coords, cum_dist)
+    turn_instr, turn_idx = _turn_instructions(POIs, G, route, coords, cum_dist)
 
     bounds = [0] + turn_idx + [len(coords) - 1]
     linear_instr = _linear_instructions(G, route, coords, bounds)
@@ -103,8 +103,8 @@ def build_response_from_route(G , route) -> RouteResponseDto:
 
     instructions = sorted(linear_instr + turn_instr, key=instruction_priority)
 
-    start_addr = get_nearest_poi(lat=G.nodes[route[0]]["y"], lon=G.nodes[route[0]]["x"])
-    end_addr = get_nearest_poi(lat=G.nodes[route[-1]]["y"], lon=G.nodes[route[-1]]["x"])
+    start_addr = get_nearest_poi(lat=G.nodes[route[0]]["y"], lon=G.nodes[route[0]]["x"], POIs=POIs)
+    end_addr = get_nearest_poi(lat=G.nodes[route[-1]]["y"], lon=G.nodes[route[-1]]["x"], POIs=POIs)
 
     return RouteResponseDto.model_construct(
         start_addr=start_addr,
