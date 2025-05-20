@@ -60,7 +60,7 @@ class YoloV5TFLiteDetector(context: Context) {
 
         for (row in predictions) {
             val objectness = row[4]
-            if (objectness < 0.4f) continue
+            if (objectness < 0.6f) continue
 
             val classScores = row.copyOfRange(5, 85)
             val maxIdx = classScores.indices.maxByOrNull { classScores[it] } ?: continue

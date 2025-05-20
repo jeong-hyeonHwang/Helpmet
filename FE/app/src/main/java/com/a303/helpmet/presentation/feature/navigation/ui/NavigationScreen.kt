@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.a303.helpmet.BuildConfig
 import com.a303.helpmet.R
 import com.a303.helpmet.domain.model.DirectionState
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationViewModel
@@ -37,10 +38,10 @@ import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
-import com.a303.helpmet.presentation.feature.preride.component.LocationCircleButton
 import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewModel
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.cache.RouteCache
+import com.a303.helpmet.util.handler.getGatewayIp
 
 @Composable
 fun NavigationScreen(
@@ -53,6 +54,8 @@ fun NavigationScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val gatewayIp = getGatewayIp(context)
+    val webPageUrl = "http://$gatewayIp:${BuildConfig.SOCKET_PORT}"
 
     // 권한 상태 관리
     var hasRecordPermission by remember {
@@ -83,9 +86,15 @@ fun NavigationScreen(
         } else {
             voiceViewModel.startListening()
         }
+    }
 
-        navigationViewModel.connectToSocket(detectionViewModel.onFrameReceived())
-
+    LaunchedEffect(gatewayIp) {
+        if (gatewayIp != null) {
+            detectionViewModel.prepareWebSocketConnection(gatewayIp)
+        }
+    }
+    LaunchedEffect(webPageUrl) {
+        navigationViewModel.connectToSocket(webPageUrl, detectionViewModel.onFrameReceived())
         detectionViewModel.startDetectionLoop()
     }
 
@@ -110,56 +119,57 @@ fun NavigationScreen(
         modifier = Modifier.fillMaxSize()
     ) {
         StreamingView(
-            detectionViewModel = detectionViewModel
+            detectionViewModel = detectionViewModel,
+            webPageUrl = webPageUrl
         )
 
-    // 카메라 뷰 토글 버튼
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(HelpmetTheme.colors.white1)
-            .padding(vertical = 8.dp)
-            .clickable { navigationViewModel.toggleStreaming() },
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .width(60.dp)
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(HelpmetTheme.colors.gray1)
-        )
-    }
-
-    // 지도
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .weight(1f)
-    ) {
-        MapScreen(
-            followUser = followUser,
-            onFollowHandled = { followUser = false },
-            routeViewModel = routeViewModel,
-            userPositionViewModel = userPositionViewModel,
-            voiceViewModel = voiceViewModel
-        )
+        // 카메라 뷰 토글 버튼
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(16.dp)
+                .background(HelpmetTheme.colors.white1)
+                .padding(vertical = 8.dp)
+                .clickable { navigationViewModel.toggleStreaming() },
+            contentAlignment = Alignment.Center
         ) {
-            DirectionIcons()
+            Box(
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(HelpmetTheme.colors.gray1)
+            )
         }
-        // 안내 멘트
-        StreamingNoticeView(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            onFinish,
-            routeViewModel = routeViewModel
-        )
+
+        // 지도
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            MapScreen(
+                followUser = followUser,
+                onFollowHandled = { followUser = false },
+                routeViewModel = routeViewModel,
+                userPositionViewModel = userPositionViewModel,
+                voiceViewModel = voiceViewModel
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                DirectionIcons()
+            }
+            // 안내 멘트
+            StreamingNoticeView(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                onFinish,
+                routeViewModel = routeViewModel
+            )
+        }
     }
-}
 }
 
 @Composable

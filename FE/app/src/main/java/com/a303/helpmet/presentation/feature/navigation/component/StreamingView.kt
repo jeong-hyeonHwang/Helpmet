@@ -1,7 +1,6 @@
 package com.a303.helpmet.presentation.feature.navigation.component
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -11,9 +10,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,14 +21,12 @@ import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -44,32 +39,24 @@ import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationView
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.handler.getGatewayIp
 import kotlinx.coroutines.delay
-import okhttp3.*
+import okhttp3.OkHttpClient
 
 @Composable
 fun StreamingView(
     navigationViewModel: NavigationViewModel = org.koin.androidx.compose.koinViewModel(),
-    detectionViewModel: DetectionViewModel
+    detectionViewModel: DetectionViewModel,
+    webPageUrl: String
 ) {
-    val context = LocalContext.current
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val streamingViewHeight = screenWidth * 3 / 4
 
     val isActiveStreamingView by navigationViewModel.isActiveStreamingView.collectAsState()
-    val gatewayIp = getGatewayIp(context)
-    val webPageUrl = "http://$gatewayIp:${BuildConfig.SOCKET_PORT}/"
+
     val isValidPi by navigationViewModel.isValidPi.collectAsState()
     val isAccessible by navigationViewModel.isAccessible.collectAsState()
 
     // ✅ 최초 실행 시 WebSocket 연결 준비
-    LaunchedEffect(gatewayIp) {
-        if (gatewayIp != null) {
-            detectionViewModel.prepareWebSocketConnection(gatewayIp)
-        }
-    }
-    LaunchedEffect(webPageUrl) {
-        navigationViewModel.validateDevice(webPageUrl)
-    }
+
 
     Column(
         modifier = Modifier
@@ -146,27 +133,6 @@ fun WebRTCPage(url: String) {
             val client = OkHttpClient.Builder()
                 .socketFactory(wifiNetwork.socketFactory)
                 .build()
-
-            val request = Request.Builder().url(wsUrl).build()
-
-            client.newWebSocket(request, object : WebSocketListener() {
-                override fun onOpen(webSocket: WebSocket, response: Response) {
-                    Log.d("WebSocket", "✅ WebSocket 연결 성공 (Wi-Fi)")
-                }
-
-                override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                    Log.e("WebSocket", "❌ WebSocket 연결 실패", t)
-                }
-
-                override fun onMessage(webSocket: WebSocket, text: String) {
-                    Log.d("WebSocket", "📨 수신: ${text.take(30)}...")
-                    // 여기서 필요한 메시지 처리 수행 (예: ViewModel로 전달)
-                }
-            })
-
-        } else {
-            Log.e("WebRTC", "❌ Wi-Fi 네트워크를 찾을 수 없습니다")
-            return@LaunchedEffect
         }
 
         // ✅ WebRTC 연결 이후 → 셀룰러로 복원
