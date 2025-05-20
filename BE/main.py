@@ -16,20 +16,24 @@ TAGS = {"amenity": True, "shop": True, "tourism": True, "building": True}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # startup
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        logger.info("✓ DB Tables created (if not exists)")
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            logger.info("✓ DB Tables created (if not exists)")
 
-    load_graphs(app)
-    logger.info("✓ Graph loaded and attached to app.state.graph")
-    load_pois(app, place_name=PLACE, tags=TAGS)
-    logger.info("✓ Features loaded")
+        load_graphs(app)
+        logger.info("✓ Graph loaded and attached to app.state.graph")
+        load_pois(app, place_name=PLACE, tags=TAGS) 
+        logger.info("✓ Features loaded")
+        
+        yield
     
-    yield
-    
-    # shutdown
-    logger.info("Server shutting down…")
+         # shutdown
+        logger.info("Server shutting down…")
 
+    except Exception as e:
+        logger.warning("Lifespan 에러: %s", e)
+        raise e
 
 app = FastAPI(
     debug=False,
