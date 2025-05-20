@@ -14,5 +14,5 @@ async def fetch_closest_public_toilet(
         .params(lat=lat, lon=lon)
         .limit(1)
     )
-    result = await db.execute(query)
+    result = await db.execute(query, {"lon": lon, "lat": lat})
     return result.scalar_one_or_none()

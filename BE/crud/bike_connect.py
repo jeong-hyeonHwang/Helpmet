@@ -14,7 +14,7 @@ async def fetch_closest_entry_node(
         .limit(1)
     )
 
-    result = await db.execute(query)
+    result = await db.execute(query, {"lon": lon, "lat": lat})
     return result.scalar_one_or_none()
 
 async def fetch_closest_exit_node(
@@ -28,5 +28,5 @@ async def fetch_closest_exit_node(
         .limit(1)
     )
 
-    result = await db.execute(query)
+    result = await db.execute(query, {"lon": lon, "lat": lat})
     return result.scalar_one_or_none()

@@ -20,5 +20,5 @@ async def fetch_top_n_bike_stations(
         .limit(limit)
     )
 
-    result = await db.execute(query)
+    result = await db.execute(query, {"lon": lon, "lat": lat})
     return result.scalars().all()
