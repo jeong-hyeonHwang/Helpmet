@@ -1,21 +1,50 @@
+import os
+from typing import Counter
 import osmnx as ox
+import logging
+import geopandas as gpd
 
-def assign_travel_time(G):
-    # 속도 설정
-    AVERAGE_SPEED_KPH = 15
+logger = logging.getLogger("core.graph")
 
-    # 주행 시간 가중치 추가
-    for u, v, k, data in G.edges(keys=True, data=True):
-        length_km = data["length"] / 1000
-        data["travel_time"] = length_km / AVERAGE_SPEED_KPH * 60
+TARGET_CRS = "EPSG:3857"
+filepath = "data/pois_seoul.gpkg"
     
 def load_graphs(app):
-    print("📂 Loading walk and bike graphs into app.state...")
-    G_walk = ox.load_graphml("data/seoul_walk_raw.graphml")
-    G_bike = ox.load_graphml("data/seoul_bicycle.graphml")
+    logger.info("그래프 로딩 중...")
 
-    assign_travel_time(G_bike)
+    G_walk = ox.load_graphml("data/time_assigned.graphml")
 
     app.state.G_walk = G_walk
-    app.state.G_bike = G_bike
-    print("✅ Graphs loaded:", len(G_walk.nodes), "walk nodes,", len(G_bike.nodes), "bike nodes")
+
+    logger.info("Graphs loaded: %s, %s", len(G_walk.nodes), "walk nodes")
+
+def drop_case_insensitive_duplicates(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    seen = set()
+    drop_cols = []
+    for col in gdf.columns:
+        key = col.lower()
+        if key in seen:
+            drop_cols.append(col)
+        else:
+            seen.add(key)
+    if drop_cols:
+        logger.warning(f"중복 컬럼 제거됨: {drop_cols}")
+    return gdf.drop(columns=drop_cols)
+
+def download_and_save_pois(place_name: str, tags: dict):
+    logger.info(f"📡 파일 없음 → POI 다운로드 시작")
+    gdf = ox.features_from_place(place_name, tags=tags)
+    gdf = gdf[gdf["name"].notna() & gdf.geometry.notna()]
+    gdf = drop_case_insensitive_duplicates(gdf)
+    gdf = gdf.to_crs(TARGET_CRS)
+
+    gdf.to_file(filepath, layer="pois", driver="GPKG", encoding="UTF-8")
+    logger.info(f"✅ 저장 완료: {filepath} (총 {len(gdf)}개 POI)")
+
+def load_pois(app, place_name, tags):
+    if not os.path.exists(filepath):
+        download_and_save_pois(place_name=place_name, tags=tags)
+
+    gdf = gpd.read_file(filepath, layer="pois")
+    _ = gdf.sindex
+    app.state.POIs = gdf

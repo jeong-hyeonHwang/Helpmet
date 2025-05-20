@@ -7,7 +7,7 @@ from services.bike_route_service import find_full_route
 
 from core.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from crud.bike_station import fetch_closest_bike_station
+from crud.bicycle_station import fetch_top_n_bike_stations
 from crud.public_toilet import fetch_closest_public_toilet
 
 from models.base_response import BaseResponse
@@ -27,18 +27,18 @@ async def get_route(
 ):
     try:
         route = find_route(request.app.state.G_walk, from_lat, from_lon, to_lat, to_lon)
-        result =  build_response_from_route(request.app.state.G_walk, route)
+        result =  build_response_from_route(request.app.state.POIs, request.app.state.G_walk, route)
 
         return BaseResponse(status=200, message="success", data=result)
     except Exception as e:
-        traceback.print_exc()  # ✅ 콘솔에 전체 에러 스택 찍힘
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.get("/bike", response_model=BaseResponse[List[RouteResponseDto]])
 async def get_bike_from_nearest(
     lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
     lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
-    max_minutes: int = Query(20, ge=10, le=60),
+    max_minutes: int = Query(20, ge=10, le=160),
     db: AsyncSession = Depends(get_db),
     request: Request = None
 ):
@@ -54,8 +54,9 @@ async def get_bike_from_nearest(
     request: Request = None
 ):
     if place_type == PlaceType.rental:
-        place = await fetch_closest_bike_station(db, lat=lat, lon=lon)
-        end_addr = place.addr1 if place.addr2 is None or len(place.addr2) == 0 else place.addr2  + ' 대여소'
+        places = await fetch_top_n_bike_stations(db, lat=lat, lon=lon, limit=1)
+        place = places[0]
+        end_addr = place.name + '대여소'
     elif place_type == PlaceType.toilet:
         place = await fetch_closest_public_toilet(db, lat=lat, lon=lon)
         end_addr = place.name
@@ -68,11 +69,11 @@ async def get_bike_from_nearest(
         request.app.state.G_walk,
         from_lat=lat,
         from_lon=lon,
-        to_lat=float(place.lat),   # ✅ Decimal → float
+        to_lat=float(place.lat),   # Decimal → float
         to_lon=float(place.lon)
     )
    
-    result = build_response_from_route(request.app.state.G_walk, route)
+    result = build_response_from_route(request.app.state.POIs, request.app.state.G_walk, route)
     result.end_addr = end_addr
 
     return BaseResponse(status=200, message="success", data=result)

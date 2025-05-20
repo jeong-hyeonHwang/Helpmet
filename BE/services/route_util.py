@@ -1,6 +1,11 @@
 import osmnx as ox
 import networkx as nx
 import math
+import logging
+
+from shapely import Point
+
+logger = logging.getLogger("services.route_util")
 
 def nearest_nodes(G, from_lat, from_lon, to_lat, to_lon):
     return (
@@ -14,15 +19,14 @@ def route_nodes(G, from_node, to_node):
 def edge_length(G, n1, n2):
     return G.edges[n1, n2, 0].get("length", 0)
 
-def build_instruction_message(G, node_id, action, distance, lat, lon):
+def build_instruction_message(POIs, G, node_id, action, distance, lat, lon):
     if is_crosswalk_node(node_id, G):
         return "횡단보도를 건너세요"
 
-    pois = get_nearest_poi(lat, lon)
-    landmark = pois[0] if pois else None
+    poi = get_nearest_poi(lat=lat, lon=lon, POIs=POIs)
 
-    if landmark:
-        return f"{landmark} 앞에서 {action}하세요"
+    if poi:
+        return f"{poi} 앞에서 {action}하세요"
     else:
         return f"약 {distance}m 앞에서 {action}하세요"
 
@@ -54,33 +58,17 @@ def calculate_angle(p1, p2, p3):
 
     return angle_deg, turn
 
-def get_nearest_poi(lat, lon, radius=30):
-    tags = {"building": True, "amenity": True, "shop": True}
-    try:
-        pois = ox.features_from_point((lat, lon), tags=tags, dist=radius)
-        if "name" in pois.columns and not pois.empty:
-            pois = pois[pois["name"].notna()]
-            pois["centroid"] = pois.geometry.centroid
-            pois["distance"] = pois["centroid"].apply(
-                lambda p: ((lat - p.y)**2 + (lon - p.x)**2)**0.5
-            )
-            nearest_poi = pois.sort_values("distance").iloc[0]
-            return nearest_poi["name"]
-    except Exception as e:
-        print(f"[ERROR] POI 탐색 실패: {e}")
-    return ""
+def get_nearest_poi(lat: float, lon: float, POIs) -> str:
+    if POIs.empty:
+        return ""
+
+    user_point = Point(lon, lat)
+    user_proj = ox.projection.project_geometry(user_point, to_crs=POIs.crs)[0]
+
+    idx_pair = POIs.sindex.nearest(user_proj, return_all=False)
+    nearest_idx = idx_pair[1][0]
+    return POIs.iloc[nearest_idx]["name"]
 
 def is_crosswalk_node(node_id, G):
     node_data = G.nodes[node_id]
     return node_data.get("highway") == "crossing"
-
-def build_instruction_message(G, node_id, action, distance, lat, lon):
-    if is_crosswalk_node(node_id, G):
-        return "횡단보도를 건너세요"
-
-    landmark = get_nearest_poi(lat, lon)
-
-    if landmark:
-        return f"{landmark} 앞에서 {action}하세요"
-    else:
-        return f"약 {distance}m 앞에서 {action}하세요"
