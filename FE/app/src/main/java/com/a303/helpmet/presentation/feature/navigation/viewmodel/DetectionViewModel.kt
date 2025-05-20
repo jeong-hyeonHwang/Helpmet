@@ -15,7 +15,7 @@ import com.a303.helpmet.data.ml.tracker.SimpleTracker
 import com.a303.helpmet.data.repository.WebsocketRepository
 import com.a303.helpmet.domain.model.command.DetectionCommand
 import com.a303.helpmet.presentation.state.detection.DetectionNoticeStateManager
-import com.a303.helpmet.presentation.state.detection.PiAccessManager
+import com.a303.helpmet.presentation.state.detection.DetectionVoiceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -105,7 +105,7 @@ class DetectionViewModel(
 
             matched?.let { result ->
                 if (level > prevLevel) {
-                    if(PiAccessManager.isSpeaking.value) return@forEach
+                    if(DetectionVoiceManager.isSpeaking.value) return@forEach
 
                     _lastWarningLevels[trackId] = level
                     val label = classDictionary[result.classId] ?: "미확인"
