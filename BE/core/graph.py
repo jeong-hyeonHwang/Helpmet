@@ -1,5 +1,4 @@
 import os
-import time
 from typing import Counter
 import osmnx as ox
 import logging
