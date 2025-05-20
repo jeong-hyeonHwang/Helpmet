@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    debug=True,
+    debug=False,
     lifespan=lifespan, 
 )
 
