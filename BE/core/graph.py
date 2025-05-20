@@ -39,7 +39,7 @@ def download_and_save_pois(place_name: str, tags: dict):
     gdf = drop_case_insensitive_duplicates(gdf)
     gdf = gdf.to_crs(TARGET_CRS)
 
-    gdf.to_file(filepath, layer="pois", driver="GPKG")
+    gdf.to_file(filepath, layer="pois", driver="GPKG", encoding="UTF-8")
     logger.info(f"✅ 저장 완료: {filepath} (총 {len(gdf)}개 POI)")
 
 def load_pois(app, place_name, tags):
