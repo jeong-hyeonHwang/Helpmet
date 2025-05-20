@@ -27,7 +27,7 @@ async def get_route(
 ):
     try:
         route = find_route(request.app.state.G_walk, from_lat, from_lon, to_lat, to_lon)
-        result =  build_response_from_route(request.app.state.G_walk, route)
+        result =  build_response_from_route(request.app.state.POIs, request.app.state.G_walk, route)
 
         return BaseResponse(status=200, message="success", data=result)
     except Exception as e:
@@ -73,7 +73,7 @@ async def get_bike_from_nearest(
         to_lon=float(place.lon)
     )
    
-    result = build_response_from_route(request.app.state.G_walk, route)
+    result = build_response_from_route(request.app.state.POIs, request.app.state.G_walk, route)
     result.end_addr = end_addr
 
     return BaseResponse(status=200, message="success", data=result)

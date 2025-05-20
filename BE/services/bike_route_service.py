@@ -102,15 +102,16 @@ async def select_best_bike_station_by_walk(
 
 async def find_full_route(db, request, lat : float, lon : float, max_minutes : int):
     G_walk = request.app.state.G_walk
+    POIs = request.app.state.POIs
 
     bike_route = await find_bike_route(db, lat, lon, max_minutes, G_walk)
-    bike_result = build_response_from_route(G_walk, bike_route)
+    bike_result = build_response_from_route(POIs, G_walk, bike_route)
     
     bike_entry_node = bike_route[0]
     walk_start_node = ox.distance.nearest_nodes(G_walk, X=lon, Y=lat)
     walk_route1 = route_nodes(G_walk, walk_start_node, bike_entry_node)
 
-    walk_result1 = build_response_from_route(G_walk, walk_route1)
+    walk_result1 = build_response_from_route(POIs, G_walk, walk_route1)
         
     bike_exit_node = bike_route[-1]
     result = await select_best_bike_station_by_walk(
@@ -125,7 +126,7 @@ async def find_full_route(db, request, lat : float, lon : float, max_minutes : i
     if result:
         walk_end_node, bike_station, walk_route2 = result
 
-    walk_result2 = build_response_from_route(G_walk, walk_route2)
+    walk_result2 = build_response_from_route(POIs, G_walk, walk_route2)
         
     result = build_combined_response(walk_result1=walk_result1, bike_result=bike_result, walk_result2=walk_result2)
     result.end_addr = bike_station.name
