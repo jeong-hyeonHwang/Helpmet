@@ -25,7 +25,7 @@
     <string name="loading_recommended_courses">추천 코스를 불러오는 중이에요</string>
 
     <!-- 코스 추천 -->
-    <string name="recommend_course_hangang">주행 코스 추천</string>
+    <string name="recommend_course">주행 코스 추천</string>
     <string name="recommend_course_with_ddareungi">따릉이와 함께 달려볼까요?</string>
 
     <!-- 음성 가이드 -->

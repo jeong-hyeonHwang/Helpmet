@@ -39,7 +39,7 @@ fun RecommendRouteView(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = stringResource(R.string.recommend_course_hangang),
+                    text = stringResource(R.string.recommend_course),
                     style = HelpmetTheme.typography.title,
                     color = HelpmetTheme.colors.white1,
                 )
