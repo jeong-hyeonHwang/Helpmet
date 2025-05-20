@@ -141,39 +141,43 @@ fun NavigationScreen(
             )
         }
 
-        // 지도
-        Box(
+    // 지도
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+    ) {
+        MapScreen(
+            followUser = followUser,
+            onFollowHandled = { followUser = false },
+            routeViewModel = routeViewModel,
+            userPositionViewModel = userPositionViewModel,
+            voiceViewModel = voiceViewModel
+        )
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .align(Alignment.BottomCenter)
         ) {
-            MapScreen(
-                followUser = followUser,
-                onFollowHandled = { followUser = false },
-                routeViewModel = routeViewModel,
-                userPositionViewModel = userPositionViewModel,
-                voiceViewModel = voiceViewModel
-            )
-            Box(
+            DirectionIcons(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            ) {
-                DirectionIcons()
-            }
+                    .padding(horizontal = 16.dp)
+            )
             // 안내 멘트
             StreamingNoticeView(
-                modifier = Modifier.align(Alignment.BottomCenter),
+                modifier = Modifier,
                 onFinish,
                 routeViewModel = routeViewModel
             )
         }
     }
 }
+}
 
 @Composable
 fun DirectionIcons(
+    modifier: Modifier = Modifier,
     viewModel: NavigationViewModel = koinViewModel()
 ) {
     val direction: DirectionState by viewModel.directionState.collectAsState()
@@ -190,8 +194,7 @@ fun DirectionIcons(
     )
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Icon(
