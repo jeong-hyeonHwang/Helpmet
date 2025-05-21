@@ -69,7 +69,8 @@ class VoiceInteractionHandler(private val context: Context){
                     11
                     // 3: 오디오 오류, 5: 클라이언트 오류, 8: 인식기 바쁨, 9: 권한 없음
                 )
-                if (error in retryableErrors) {
+                if (error in retryableErrors && !isTtsSpeaking) {
+                    Log.e("VoiceHandler", "STT 중단 - 재시도 코드: $error")
                     restartListeningWithDelay()
                 } else {
                     // 재시도 불가 오류: 권한 안내, 상태 정리 등 추가 처리
@@ -83,11 +84,15 @@ class VoiceInteractionHandler(private val context: Context){
     }
 
     private fun restartListeningWithDelay(){
+        Log.d("VoiceHandler", "restartListening")
         Handler(Looper.getMainLooper()).postDelayed({
             if (!isListening && !isTtsSpeaking) {
+                Log.d("VoiceHandler", "🔁 STT 재시작")
                 startListening()
+            }else{
+                Log.w("VoiceHandler", "🚫 TTS 중 or 이미 STT 중 → 재시작 안 함")
             }
-        }, 400)
+        }, 800)
     }
 
     private fun createRecognizerIntent(): Intent {

@@ -115,7 +115,6 @@ class MainActivity : ComponentActivity() {
                                 // 안내 종료 시 다시 1번(helmet_check) 화면으로
                                 navController.popBackStack("helmet_check", inclusive = false)
                             },
-                            voiceViewModel = voiceInteractViewModel,
                             navController = navController,
                             routeViewModel = routeViewModel
                         )
@@ -124,19 +123,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        receiver = object : BroadcastReceiver(){
-            override fun onReceive(context: Context?, intent: Intent?) {
-                Log.d("NotificationListener", "전달 ok")
-                voiceInteractViewModel.onReturnAlertReceived();
-            }
-        }
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-            registerReceiver(receiver, IntentFilter("com.a303.helpmet.RETURN_ALERT_DETECTED"), Context.RECEIVER_NOT_EXPORTED)
-        }else {
-            @Suppress("DEPRECATION")
-            registerReceiver(receiver, IntentFilter("com.a303.helpmet.RETURN_ALERT_DETECTED"))
-        }
     }
 
     override fun onResume() {

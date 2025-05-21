@@ -1,7 +1,14 @@
 package com.a303.helpmet.presentation.feature.navigation.ui
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.os.Build
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,6 +42,8 @@ import com.a303.helpmet.presentation.feature.navigation.viewmodel.NavigationView
 import org.koin.androidx.compose.koinViewModel
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingNoticeView
 import com.a303.helpmet.presentation.feature.navigation.component.StreamingView
+import com.a303.helpmet.presentation.feature.navigation.component.getCellularNetwork
+import com.a303.helpmet.presentation.feature.navigation.component.getWifiNetwork
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.DetectionViewModel
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
 import com.a303.helpmet.presentation.feature.preride.UserPositionViewModel
@@ -42,6 +51,7 @@ import com.a303.helpmet.presentation.feature.voiceinteraction.VoiceInteractViewM
 import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.cache.RouteCache
 import com.a303.helpmet.util.handler.getGatewayIp
+import kotlinx.coroutines.delay
 
 @Composable
 fun NavigationScreen(
@@ -49,13 +59,13 @@ fun NavigationScreen(
     navigationViewModel: NavigationViewModel = koinViewModel(),
     userPositionViewModel: UserPositionViewModel = viewModel(),
     routeViewModel: RouteViewModel,
-    voiceViewModel: VoiceInteractViewModel,
     detectionViewModel: DetectionViewModel = koinViewModel(),
     navController: NavController
 ) {
     val context = LocalContext.current
     val gatewayIp = getGatewayIp(context)
     val webPageUrl = "http://$gatewayIp:${BuildConfig.SOCKET_PORT}"
+    val voiceViewModel : VoiceInteractViewModel = koinViewModel()
 
     // 권한 상태 관리
     var hasRecordPermission by remember {
@@ -72,10 +82,67 @@ fun NavigationScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasRecordPermission = isGranted
-        if (isGranted) {
+        if(!isGranted){
+            voiceViewModel.notifyPermissionMissing()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val appContext = context.applicationContext
+        val filter = IntentFilter("com.a303.helpmet.RETURN_ALERT_DETECTED")
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Log.d("NotificationReceiver", "NavigationScreen에서 수신")
+                voiceViewModel.onReturnAlertReceived()
+            }
+        }
+
+        ContextCompat.registerReceiver(
+            appContext,
+            receiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        onDispose {
+            try {
+                appContext.unregisterReceiver(receiver)
+            } catch (e: IllegalArgumentException) {
+                Log.w("Receiver", "이미 해제된 리시버입니다: ${e.message}")
+            }
+        }
+    }
+
+
+    LaunchedEffect(Unit) {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val wifiNetwork = getWifiNetwork(context)
+        val cellularNetwork = getCellularNetwork(context)
+
+        if (wifiNetwork != null) {
+            cm.bindProcessToNetwork(wifiNetwork)
+            Log.d("WebRTC", "✅ Wi-Fi 네트워크로 바인딩 완료")
+        }
+
+        // ✅ WebRTC 연결 이후 → 셀룰러로 복원
+        delay(8000L)
+
+        if (cellularNetwork != null) {
+            cm.bindProcessToNetwork(cellularNetwork)
+            Log.d("WebRTC", "🔁 셀룰러 네트워크로 복원 완료")
+            delay(1000L)
+        } else {
+            cm.bindProcessToNetwork(null)
+            Log.w("WebRTC", "⚠️ 셀룰러 네트워크를 찾지 못해 기본으로 복원")
+        }
+
+        // 셀룰러 복원 후, 권한이 있다면 STT 시작
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
             voiceViewModel.startListening()
         } else {
-            voiceViewModel.notifyPermissionMissing()
+            Log.w("VoiceHandler", "❌ RECORD_AUDIO 권한이 없어 STT 시작 안함")
         }
     }
 
@@ -83,9 +150,8 @@ fun NavigationScreen(
     LaunchedEffect(Unit) {
         if (!hasRecordPermission) {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        } else {
-            voiceViewModel.startListening()
         }
+
     }
 
     LaunchedEffect(webPageUrl) {
