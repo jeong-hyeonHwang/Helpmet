@@ -88,13 +88,8 @@ fun NavigationScreen(
         }
     }
 
-    LaunchedEffect(gatewayIp) {
-        if (gatewayIp != null) {
-            detectionViewModel.prepareWebSocketConnection(gatewayIp)
-        }
-    }
     LaunchedEffect(webPageUrl) {
-        navigationViewModel.connectToSocket(webPageUrl, detectionViewModel.onFrameReceived())
+        navigationViewModel.connectToSocket(webPageUrl,context, detectionViewModel.onFrameReceived())
         detectionViewModel.startDetectionLoop()
     }
 

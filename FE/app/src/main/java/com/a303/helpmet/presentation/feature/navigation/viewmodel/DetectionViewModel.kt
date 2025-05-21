@@ -46,29 +46,6 @@ class DetectionViewModel(
         _latestBitmap.value = bitmap
     }
 
-    fun prepareWebSocketConnection(ip: String) {
-        val context = getApplication<Application>().applicationContext
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        val wifiNetwork = connectivityManager.allNetworks.firstOrNull { network ->
-            val caps = connectivityManager.getNetworkCapabilities(network)
-            caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-        }
-
-        if (wifiNetwork == null) {
-            Log.e("DetectionVM", "❌ Wi-Fi 네트워크를 찾을 수 없음")
-            return
-        }
-
-        // 👉 여기서 Wi-Fi 기반 클라이언트를 명시적으로 생성
-        val wifiClient = OkHttpClient.Builder()
-            .socketFactory(wifiNetwork.socketFactory)
-            .build()
-
-        websocketRepository.setClient(wifiClient) // 반드시 setClient 지원하도록 구현돼 있어야 함
-        websocketRepository.connect(ip = ip) // 내부에서 url 구성 or 넘겨줘도 됨
-    }
-
     fun startDetectionLoop() {
         viewModelScope.launch {
             while (true) {

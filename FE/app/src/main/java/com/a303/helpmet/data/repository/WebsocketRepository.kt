@@ -14,19 +14,10 @@ class WebsocketRepository(
     private val socketClient: CommandSocketClient,
     private val context: Context
 ) {
-    fun setClient(client: OkHttpClient) {
-        socketClient.setClient(client)
-    }
-
-    fun connect(ip: String) {
-        val url = "ws://$ip:${BuildConfig.SOCKET_PORT}/ws"
-        socketClient.connect(url, ip)
-    }
-
-    fun connect(onFrameReceived: (Bitmap) -> Unit) {
+    fun connect(context: Context, onFrameReceived: (Bitmap) -> Unit) {
         val ip = getGatewayIp(context) ?: return
         val url = "ws://$ip:${BuildConfig.SOCKET_PORT}/ws"
-        socketClient.connect(url, ip, onFrameReceived)
+        socketClient.connect(context, url, ip, onFrameReceived)
     }
 
     fun sendDirectionCommand(command: DirectionCommand) {

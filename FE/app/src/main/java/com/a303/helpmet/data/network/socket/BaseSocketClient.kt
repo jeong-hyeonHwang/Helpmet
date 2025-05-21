@@ -1,5 +1,8 @@
 package com.a303.helpmet.data.network.socket
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -24,8 +27,29 @@ abstract class BaseSocketClient(
         this.client = newClient
     }
 
-    open fun connect(url: String, ip: String) {
+    open fun connect(context: Context, url: String, ip: String) {
         if (isConnected || isConnecting) return
+
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+
+        val wifiNetwork = connectivityManager.activeNetwork?.takeIf { network ->
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+        }
+
+        if (wifiNetwork != null) {
+            cm.bindProcessToNetwork(wifiNetwork)
+            Log.d("WebRTC", "Wi-Fi 네트워크로 바인딩 완료")
+
+            // WebSocket 연결 (Wi-Fi 기반)
+            val client = OkHttpClient.Builder()
+                .socketFactory(wifiNetwork.socketFactory)
+                .build()
+
+            setClient(client)
+        }
+
 
         isConnecting = true
         lastUrl = url
@@ -40,7 +64,6 @@ abstract class BaseSocketClient(
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(ws: WebSocket, response: Response) {
-                Log.d("WebSocket", "✅ 연결됨: $url  in BSC")
                 isConnected = true
                 isConnecting = false
                 retryCount = 0
@@ -48,25 +71,22 @@ abstract class BaseSocketClient(
             }
 
             override fun onMessage(ws: WebSocket, text: String) {
-                Log.d("WebSocket", "📩 수신 메시지: $text  in BSC")
                 onMessage(text)
             }
 
             override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                Log.e("WebSocket", "❌ 연결 실패: ${t}  in BSC")
                 isConnected = false
                 isConnecting = false
                 if (retryCount < maxRetries) {
                     retryCount++
                     Handler(Looper.getMainLooper()).postDelayed({
-                        connect(lastUrl, lastIp)
+                        connect(context, lastUrl, lastIp)
                     }, retryDelay)
                 }
                 onFailure(t)
             }
 
             override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-                Log.d("WebSocket", "🔌 연결 종료: $reason in BSC")
                 isConnected = false
                 isConnecting = false
                 onClosed()
@@ -89,7 +109,7 @@ abstract class BaseSocketClient(
         val message = json.toString()
         val success = webSocket?.send(message) ?: false
         if (!success) {
-            Log.e("WebSocket", "❌ 메시지 전송 실패  in BSC")
+            Log.e("WebSocket", "메시지 전송 실패  in BSC")
         }
     }
 

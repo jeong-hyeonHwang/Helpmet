@@ -1,6 +1,7 @@
 package com.a303.helpmet.presentation.feature.navigation.viewmodel
 
 import DeviceProvider
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -60,12 +61,12 @@ class NavigationViewModel(
         }
     }
 
-    fun connectToSocket(baseUrl: String, onFrameReceived: (Bitmap) -> Unit) {
+    fun connectToSocket(baseUrl: String, context: Context, onFrameReceived: (Bitmap) -> Unit) {
         if (!isSocketConnected){
             validateDevice(baseUrl) { isValidPi, isAccess ->
                 if (isValidPi && isAccess) {
                     Log.d("qwer", "연결 시작")
-                    websocketRepository.connect(onFrameReceived)
+                    websocketRepository.connect(context, onFrameReceived)
                     isSocketConnected = true
                 }
             }

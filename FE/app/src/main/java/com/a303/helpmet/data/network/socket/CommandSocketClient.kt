@@ -1,5 +1,6 @@
 package com.a303.helpmet.data.network.socket
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Base64
@@ -15,9 +16,9 @@ class CommandSocketClient : BaseSocketClient() {
     private val json = Json { ignoreUnknownKeys = true }
     var onFrameReceived: ((Bitmap) -> Unit)? = null
 
-    fun connect(url: String, ip: String, onFrameReceived: (Bitmap) -> Unit) {
+    fun connect(context: Context, url: String, ip: String, onFrameReceived: (Bitmap) -> Unit) {
         this.onFrameReceived = onFrameReceived
-        super.connect(url, ip)
+        super.connect(context, url, ip)
     }
 
     fun sendDirectionCommand(command: DirectionCommand) {
