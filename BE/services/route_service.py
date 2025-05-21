@@ -37,11 +37,28 @@ def _build_route_segments(G, route):
 
     return segments
 
-def _cumulative_distances(G, route):
-    cum = [0]
+def compute_distances_and_time(G, route):
+    speed_walk = 1.4  # m/s
+    speed_bike = 4.1  # m/s
+
+    cum_distances = [0]
+    total_time = 0.0
+    total_length = 0.0
+
     for n1, n2 in zip(route, route[1:]):
-        cum.append(cum[-1] + edge_length(G, n1, n2))
-    return cum
+        edge = G.edges[n1, n2, 0]
+        length = edge.get("length", 0)
+
+        is_cycleway = edge.get("highway") == "cycleway"
+        speed = speed_bike if is_cycleway else speed_walk
+
+        travel_time = length / speed if speed > 0 else 0
+
+        total_length += length
+        total_time += travel_time
+        cum_distances.append(total_length)
+
+    return cum_distances, int(total_time), round(total_length, 1)
 
 def _turn_instructions(POIs, G, route, coords, cum_dist):
     turns, turn_idxs = [], []
@@ -88,9 +105,7 @@ def find_route(G, from_lat, from_lon, to_lat, to_lon):
 
 def build_response_from_route(POIs, G , route) -> RouteResponseDto:
     coords = [(G.nodes[n]["y"], G.nodes[n]["x"]) for n in route]
-    cum_dist = _cumulative_distances(G, route)
-    total_len = cum_dist[-1]
-    est_time = int((total_len / 1000) / 15 * 3600)
+    cum_dist, est_time, total_len = compute_distances_and_time(G, route)
 
     segments = _build_route_segments(G, route)
     turn_instr, turn_idx = _turn_instructions(POIs, G, route, coords, cum_dist)
