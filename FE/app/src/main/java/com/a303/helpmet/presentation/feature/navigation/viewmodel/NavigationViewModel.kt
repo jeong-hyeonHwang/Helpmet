@@ -20,7 +20,7 @@ class NavigationViewModel(
     private val deviceRepository: DeviceRepository,
     private val websocketRepository: WebsocketRepository,
     private val getWifiNetworkUseCase: GetWifiNetworkUseCase
-) : ViewModel()  {
+) : ViewModel() {
     private val _isActiveStreamingView = MutableStateFlow(true)
     val isActiveStreamingView: StateFlow<Boolean> = _isActiveStreamingView
 
@@ -47,28 +47,29 @@ class NavigationViewModel(
             val service = retrofit?.create(DeviceService::class.java)
             val repository = service?.let { DeviceRepository(it) }
 
-            if (repository != null) {
-                Log.d("qwer", "1${isValidPi.value} ${isAccessible.value}")
-
-                val (isValidPi, isAccess) = repository.isHelpmetDevice()
-                Log.d("qwer", "${isValidPi} ${isAccess}")
-                _isValidPi.value = isValidPi
-                _isAccessState.value = isAccess
-
-                onValidated(isValidPi, isAccess)
+            if (repository == null) {
+                _isValidPi.value = false
+                return@launch
             }
+
+            val (isValidPi, isAccess) = repository.isHelpmetDevice()
+            Log.d("qwer", "${isValidPi} ${isAccess}")
+
+            onValidated(isValidPi, isAccess)
 
         }
     }
 
     fun connectToSocket(baseUrl: String, context: Context, onFrameReceived: (Bitmap) -> Unit) {
-        if (!isSocketConnected){
+        if (!isSocketConnected) {
             validateDevice(baseUrl) { isValidPi, isAccess ->
                 if (isValidPi && isAccess) {
                     Log.d("qwer", "연결 시작")
                     websocketRepository.connect(context, onFrameReceived)
                     isSocketConnected = true
                 }
+                _isValidPi.value = isValidPi
+                _isAccessState.value = isAccess
             }
 
         }
