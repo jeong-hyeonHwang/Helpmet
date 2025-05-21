@@ -1,16 +1,16 @@
 import osmnx as ox
 import networkx as nx
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import logging
 
 from core.models import BicycleStation
 from services.route_service import build_response_from_route
 from crud.bicycle_station import fetch_top_n_bike_stations
 from crud.bike_connect import fetch_top_n_close_entry_nodes
-from services.route_util import route_nodes
 from models.route_response import Instruction, RouteResponseDto
 import heapq
+from collections import defaultdict
 
 EXTRA_MINUTES : int = 10
 
@@ -25,49 +25,42 @@ async def find_bike_routes(
     bike_speed_mps = 5.0
     max_distance_m = limit_minutes * 60 * bike_speed_mps
 
-    heap = [(0, entry_node, [])]
+    visited: Dict[int, float] = {}  # 노드 ID → 가장 짧은 거리
     exit_candidates: List[Tuple[float, List[int]]] = []
 
+    heap = [(0.0, entry_node, [])]
+    print("max dist: ", max_distance_m)
     while heap:
         curr_dist, curr_node, path = heapq.heappop(heap)
 
-        if curr_node in path:
+        if curr_node in visited and visited[curr_node] <= curr_dist:
             continue
-
-        if(len(path) > 20):
-            break
+        visited[curr_node] = curr_dist
 
         new_path = path + [curr_node]
 
         if G.nodes[curr_node].get("is_exit"):
             exit_candidates.append((curr_dist, new_path))
-        
+
         if curr_dist > max_distance_m:
-            print(f"끝!!!!!!!!!!!!! 현재 노드: {curr_node}, 거리: {curr_dist} > {max_distance_m}, path: {new_path}")
-            continue
-
-        print(f"현재 노드: {curr_node}, 거리: {curr_dist}, path: {new_path}")
-        print(f"이웃 노드 수: {len(list(G.edges(curr_node)))}")
-
+                continue
+        
         for _, neighbor, edge_data in G.edges(curr_node, data=True):
-            print("\t", neighbor, edge_data)
-
             if edge_data.get("highway") != "cycleway":
                 continue
 
-            if neighbor not in new_path:
-                edge_len = edge_data.get("length", 0)
-                heapq.heappush(heap, (curr_dist + edge_len, neighbor, new_path))
+            edge_len = edge_data.get("length", 0)
+            if edge_len == 0:
+                continue
 
-    # 경로 후보가 없으면 빈 리스트 반환
-    if not exit_candidates:
-        return []
+            heapq.heappush(heap, (curr_dist + edge_len, neighbor, new_path))
 
-    # 상위 N개 경로 선택 (거리 긴 순)
+        if not exit_candidates:
+            return []
+    
     exit_candidates.sort(key=lambda x: x[0], reverse=True)
     top_paths = [path for _, path in exit_candidates[:top_n]]
-    print(len(top_paths))
-    print(top_paths)
+
     return top_paths
 
 async def select_best_entry_node_by_walk(
@@ -172,10 +165,10 @@ async def find_full_routes(
     walk_result1 = build_response_from_route(POIs, G_walk, walk_route1)
 
     # 남은 시간 계산
-    adjusted_minutes = max_minutes - (walk_result1.estimated_time_sec / 60)
+    adjusted_minutes = max_minutes - (walk_result1.estimated_time_sec / 60) - 10
 
     # bike: 진입노드에서 출구노드로 향하는 다양한 자전거도로 경로 찾기
-    bike_routes = await find_bike_routes(entry_node, max_minutes, G_walk, top_n=top_n)
+    bike_routes = await find_bike_routes(entry_node, adjusted_minutes, G_walk, top_n=top_n)
 
     results: List[RouteResponseDto] = []
 
