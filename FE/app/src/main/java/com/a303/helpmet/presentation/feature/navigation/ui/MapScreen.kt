@@ -22,6 +22,7 @@ import com.a303.helpmet.domain.extension.isApproaching
 import com.a303.helpmet.domain.extension.isNear
 import com.a303.helpmet.domain.model.Action
 import com.a303.helpmet.domain.model.DirectionState
+import com.a303.helpmet.presentation.feature.navigation.test.SimulatedPathTest
 import com.a303.helpmet.presentation.feature.navigation.usecase.AdjustCameraUseCase
 import com.a303.helpmet.presentation.feature.navigation.usecase.UpdateUserPositionShapesUseCase
 import com.a303.helpmet.presentation.feature.navigation.viewmodel.RouteViewModel
@@ -93,6 +94,17 @@ fun MapScreen(
         turnState = TurnState.IDLE
         expectedHeading = null
     }
+
+    // TEST: 테스트용 시뮬레이션 위치 이동
+
+//    LaunchedEffect(routeOption) {
+//        if (routeOption != null) {
+//            val simulatedPath = SimulatedPathTest.simulatedPath
+//            routeViewModel.simulateMovementWithProgressUpdate(simulatedPath) {
+//                userPositionViewModel.setMockPosition(it)
+//            }
+//        }
+//    }
 
     LaunchedEffect(Unit) {
         routeViewModel.loadFromCache()
@@ -310,7 +322,7 @@ fun MapScreen(
                 }
 
                 destination?.location?.let{ loc ->
-                    if(!hasEnded && position.isNear(loc, threshold = 25.0)){
+                    if(!hasEnded && position.isNear(loc, threshold = 5.0)){
                         hasEnded = true
                         voiceViewModel.setEndGuideContext()
                         handleGuideEnd()

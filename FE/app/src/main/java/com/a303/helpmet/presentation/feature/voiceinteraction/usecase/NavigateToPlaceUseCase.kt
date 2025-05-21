@@ -2,6 +2,7 @@ package com.a303.helpmet.presentation.feature.voiceinteraction.usecase
 
 import android.content.Context
 import android.util.Log
+import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.data.service.NavigationService
 import com.a303.helpmet.domain.mapper.toDomain
 import com.a303.helpmet.presentation.mapper.toInstructionList
@@ -24,7 +25,7 @@ class NavigateToPlaceUseCase(
         placeType: String
     ): NavigateRouteResult? {
         return try {
-            val response = navigationService.getBikeNavigationNearBy(
+            val response = FakeNavigationService().getBikeNavigationNearBy(
                 lat = currentPosition.latitude,
                 lng = currentPosition.longitude,
                 placeType = placeType

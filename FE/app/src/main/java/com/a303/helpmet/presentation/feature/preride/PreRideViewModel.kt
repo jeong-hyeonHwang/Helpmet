@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.data.network.RetrofitProvider
+import com.a303.helpmet.data.service.FakeNavigationService
 import com.a303.helpmet.domain.usecase.GetCellularNetworkUseCase
 import com.a303.helpmet.domain.mapper.toDomain
 import com.a303.helpmet.presentation.mapper.toInstructionList
@@ -58,7 +59,7 @@ class PreRideViewModel(
                 retrofitProvider.navigationService
             }
 
-            val response = service.getBikeNavigationRouteList(
+            val response = FakeNavigationService().getBikeNavigationRouteList(
                 lat = position.latitude,
                 lng = position.longitude,
                 maxMinutes = minute
