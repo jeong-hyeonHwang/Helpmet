@@ -60,18 +60,10 @@ fun MapScreen(
     val heading by userPositionViewModel.heading.collectAsState()
     val routeOption by routeViewModel.routeLineOptions.collectAsState()
     val destination by routeViewModel.destination.collectAsState()
-
     val isVoiceReady by voiceViewModel.isVoiceReady.collectAsState()
-
-    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
-    var kakaoMap by remember { mutableStateOf<KakaoMap?>(null) }
-    var routeLineLayer by remember { mutableStateOf<RouteLineLayer?>(null) }
-    var shapeLayer by remember { mutableStateOf<ShapeLayer?>(null) }
-    var hasEnded by remember { mutableStateOf(false) }
-
-    // 새로운 경로를 탐색하는 중을 나타내는 상태 변수
     val isLoading by voiceViewModel.isLoading.collectAsState()
 
+    var hasEnded by remember { mutableStateOf(false) }
     var hasLocPerm by remember {
         mutableStateOf(
             ActivityCompat.checkSelfPermission(
@@ -79,13 +71,21 @@ fun MapScreen(
             ) == PackageManager.PERMISSION_GRANTED
         )
     }
-
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasLocPerm = granted }
 
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    var kakaoMap by remember { mutableStateOf<KakaoMap?>(null) }
+    var routeLineLayer by remember { mutableStateOf<RouteLineLayer?>(null) }
+    var shapeLayer by remember { mutableStateOf<ShapeLayer?>(null) }
+
     var turnState by remember { mutableStateOf(TurnState.IDLE) }
     var expectedHeading by remember { mutableStateOf<Float?>(null) }
+
+    // MapView 초기화 지연용
+    var shouldInitMap by remember { mutableStateOf(false) }
+
     var listenerRegistered by remember { mutableStateOf(false) }
 
     fun handleGuideEnd(){
@@ -95,21 +95,12 @@ fun MapScreen(
         expectedHeading = null
     }
 
-    // TEST: 테스트용 시뮬레이션 위치 이동
-
-//    LaunchedEffect(routeOption) {
-//        if (routeOption != null) {
-//            val simulatedPath = SimulatedPathTest.simulatedPath
-//            routeViewModel.simulateMovementWithProgressUpdate(simulatedPath) {
-//                userPositionViewModel.setMockPosition(it)
-//            }
-//        }
-//    }
-
     LaunchedEffect(Unit) {
+        delay(1000) // 1초 후 초기화
+        shouldInitMap = true
+
         routeViewModel.loadFromCache()
         if (!hasLocPerm) permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-
         if (!listenerRegistered) {
             voiceViewModel.setOnRouteUpdateListener { result ->
                 routeViewModel.setRouteOption(result.routeOptions)
@@ -123,114 +114,77 @@ fun MapScreen(
     LaunchedEffect(hasLocPerm) {
         if (hasLocPerm) {
             userPositionViewModel.startTracking(context) { pos, _ ->
-                // 위치가 바뀔 때마다 호출됨
                 voiceViewModel.updatePosition(pos)
             }
         }
     }
 
-    LaunchedEffect(routeOption) {
-        hasEnded = false
-        val layer = routeLineLayer
-        val map = kakaoMap
-        val option = routeOption
-
-        if (option != null && layer != null && map != null) {
-            layer.removeAll()
-
-            val routeLine = layer.addRouteLine(option)
-            routeViewModel.routeLine = routeLine
-
-            val allPoints = option.segments.flatMap { it.points }
-            val lats = allPoints.map { it.latitude }
-            val lons = allPoints.map { it.longitude }
-
-            val bounds = LatLngBounds(
-                LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
-                LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
-            )
-
-            map.moveCamera(CameraUpdateFactory.fitMapPoints(bounds, 100), CameraAnimation.from(500))
-        } else {
-            Log.w("NavigationUpdateError", "❗ 조건 불충분: option=$option, layer=$layer, map=$map")
-        }
-    }
-
-    // TEST: 테스트용 시뮬레이션 위치 이동
-    /*
-    LaunchedEffect(routeOption) {
-        if (routeOption != null) {
-            routeViewModel.simulateMovementWithProgressUpdate(SimulatedPathTest.simulatedPath) {
-                userPositionViewModel.setMockPosition(it)
-            }
-        }
-    }
-    */
+    // 📦 UI 시작
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(
-            factory = { ctx ->
-                MapView(ctx).apply {
-                    lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
-                        override fun onResume(owner: LifecycleOwner) = resume()
-                        override fun onPause(owner: LifecycleOwner) = pause()
-                        override fun onDestroy(owner: LifecycleOwner) = finish()
-                    })
-                    mapViewRef = this
+        if (shouldInitMap) {
+            AndroidView(
+                factory = { ctx ->
+                    MapView(ctx).apply {
+                        lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
+                            override fun onResume(owner: LifecycleOwner) = resume()
+                            override fun onPause(owner: LifecycleOwner) = pause()
+                            override fun onDestroy(owner: LifecycleOwner) = finish()
+                        })
+                        mapViewRef = this
 
-                    start(
-                        object : MapLifeCycleCallback() {
-                            override fun onMapDestroy() {}
+                        start(
+                            object : MapLifeCycleCallback() {
+                                override fun onMapDestroy() {}
+                                override fun onMapError(p0: Exception?) {}
+                            },
+                            object : KakaoMapReadyCallback() {
+                                override fun onMapReady(map: KakaoMap) {
+                                    kakaoMap = map
+                                    shapeLayer = map.shapeManager?.getLayer()
+                                    routeLineLayer = map.routeLineManager?.getLayer()
 
-                            override fun onMapError(p0: Exception?) {}
-                        },
-                        object : KakaoMapReadyCallback() {
-                            override fun onMapReady(map: KakaoMap) {
-                                kakaoMap = map
-                                shapeLayer = map.shapeManager?.getLayer()
-                                routeLineLayer = map.routeLineManager?.getLayer()
+                                    routeOption?.let { opts ->
+                                        val routeLine = routeLineLayer!!.addRouteLine(opts)
+                                        routeViewModel.routeLine = routeLine
 
-                                routeOption?.let { opts ->
-                                    val routeLine = routeLineLayer!!.addRouteLine(opts)
-                                    routeViewModel.routeLine = routeLine
+                                        val allPoints = opts.segments.flatMap { it.points }
+                                        val lats = allPoints.map { it.latitude }
+                                        val lons = allPoints.map { it.longitude }
 
-                                    val allPoints = opts.segments.flatMap { it.points }
-                                    val lats = allPoints.map { it.latitude }
-                                    val lons = allPoints.map { it.longitude }
-
-                                    val bounds = LatLngBounds(
-                                        LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
-                                        LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
-                                    )
-
-                                    val update = CameraUpdateFactory.fitMapPoints(bounds, 100)
-                                    map.moveCamera(update, CameraAnimation.from(500))
+                                        val bounds = LatLngBounds(
+                                            LatLng.from(lats.minOrNull()!!, lons.minOrNull()!!),
+                                            LatLng.from(lats.maxOrNull()!!, lons.maxOrNull()!!)
+                                        )
+                                        val update = CameraUpdateFactory.fitMapPoints(bounds, 100)
+                                        map.moveCamera(update, CameraAnimation.from(500))
+                                    }
                                 }
+
+                                override fun getZoomLevel(): Int = defaultZoom
+                                override fun getPosition(): LatLng = LatLng.from(0.0, 0.0)
                             }
-
-                            override fun getZoomLevel(): Int = defaultZoom
-                            override fun getPosition(): LatLng = LatLng.from(0.0, 0.0)
-                        }
-                    )
-                }
-            },
-            update = {
-                routeLineLayer?.apply {
-                    removeAll()
-                    routeOption?.let { addRouteLine(it) }
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInteropFilter {
-                    if (it.action == MotionEvent.ACTION_DOWN) {
-                        userPositionViewModel.setUserInteracting(true)
+                        )
                     }
-                    mapViewRef?.dispatchTouchEvent(it)
-                    true
-                }
-        )
+                },
+                update = {
+                    routeLineLayer?.apply {
+                        removeAll()
+                        routeOption?.let { addRouteLine(it) }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInteropFilter {
+                        if (it.action == MotionEvent.ACTION_DOWN) {
+                            userPositionViewModel.setUserInteracting(true)
+                        }
+                        mapViewRef?.dispatchTouchEvent(it)
+                        true
+                    }
+            )
+        }
 
-        if(isLoading){
+        if (isLoading) {
             RouteMapLoadingView(
                 message = "경로를 탐색중입니다.",
                 isBackgroundBlack = false
