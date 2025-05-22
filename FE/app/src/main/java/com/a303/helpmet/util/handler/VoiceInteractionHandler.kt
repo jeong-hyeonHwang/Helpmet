@@ -66,7 +66,7 @@ class VoiceInteractionHandler(private val context: Context){
                     SpeechRecognizer.ERROR_SERVER,          // 4번
                     SpeechRecognizer.ERROR_SPEECH_TIMEOUT,  // 6번
                     SpeechRecognizer.ERROR_NO_MATCH,         // 7번
-                    11
+
                     // 3: 오디오 오류, 5: 클라이언트 오류, 8: 인식기 바쁨, 9: 권한 없음
                 )
                 if (error in retryableErrors && !isTtsSpeaking) {

@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
-import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -52,6 +51,7 @@ import com.a303.helpmet.ui.theme.HelpmetTheme
 import com.a303.helpmet.util.cache.RouteCache
 import com.a303.helpmet.util.handler.getGatewayIp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun NavigationScreen(

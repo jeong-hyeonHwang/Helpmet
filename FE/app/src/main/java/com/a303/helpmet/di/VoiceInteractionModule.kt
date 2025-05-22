@@ -15,7 +15,7 @@ val voiceInteractionModule = module {
         )
     }
 
-    single { NavigateToPlaceUseCase(get()) }
+    single { NavigateToPlaceUseCase(get(), get()) }
     single { SendDirectionCommandUseCase(get()) }
 
 }

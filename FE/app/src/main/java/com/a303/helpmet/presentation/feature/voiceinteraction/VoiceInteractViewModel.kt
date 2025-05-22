@@ -1,7 +1,6 @@
 package com.a303.helpmet.presentation.feature.voiceinteraction
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.a303.helpmet.R
@@ -176,7 +175,7 @@ class VoiceInteractViewModel(
                     }
                     VoiceCommand.END_GUIDE -> {
                         promptContext = VoicePromptContext.EndGuide
-                        speak(context.getString(R.string.voice_prompt_rental))
+                        speak(context.getString(R.string.voice_guide_end_message))
                     }
                     else -> { }
                 }
