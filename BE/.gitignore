@@ -3,6 +3,7 @@
 
 /cache/*
 /data/*
+!/data/time_assigned.graphml
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
