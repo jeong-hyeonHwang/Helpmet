@@ -19,6 +19,16 @@ socket.port={PORT NUMBER}
 ---
 
 ### BE
+- IDE: `VS Code`
+
+- 환경변수: `.env` 파일에 아래의 값을 넣습니다.
+```
+# database
+DATABASE_URL = "postgresql+asyncpg://postgres:helmeta303@k12a303.p.ssafy.io:5432/helmet_db"
+
+```
+
+- 비고: BE/data/ 경로에 `time_assigned.graphml` 파일이 있어야 합니다.
 
 ---
 
