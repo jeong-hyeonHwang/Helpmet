@@ -1,8 +1,8 @@
 ## Gitlab 소스 클론 이후 빌드 및 배포할 수 있도록 정리한 문서
 
 ### FE(AOS)
-- IDE: `Android Studio Meerkat(2024.3.2)`
 
+- IDE: `Android Studio Meerkat(2024.3.2)`
 
 - 환경변수: `local.properties` 파일에 아래의 값들을 넣습니다.
 
@@ -19,9 +19,11 @@ socket.port={PORT NUMBER}
 ---
 
 ### BE
+
 - IDE: `VS Code`
 
 - 환경변수: `.env` 파일에 아래의 값을 넣습니다.
+
 ```
 # database
 DATABASE_URL = "postgresql+asyncpg://postgres:helmeta303@k12a303.p.ssafy.io:5432/helmet_db"
@@ -34,6 +36,28 @@ DATABASE_URL = "postgresql+asyncpg://postgres:helmeta303@k12a303.p.ssafy.io:5432
 
 ### AI
 
+- 온디바이스로 구현
+
 ---
 
 ### Rasberry PI
+
+실행 방법
+
+SSH로 라즈베리파이에 접속합니다.
+
+```bash
+ssh helmeta303@{라즈베리파이_IP}
+```
+
+프로젝트 경로로 이동합니다.
+
+```bash
+cd ~/S12P31A303/AI
+```
+
+서버 실행
+
+```bash
+python3 merge_main.py
+```
