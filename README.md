@@ -47,7 +47,7 @@ HelpMet은 자전거 주행 중 발생할 수 있는 **후방 시야 확보 문�
 ---
 
 ## 🧪 시스템 구조
-
+![A303_HELPMET_ARCHI.png](./A303_HELPMET_ARCHI.png)
 
 ## 📊 기대 효과
 
