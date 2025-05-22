@@ -1,0 +1,79 @@
+from fastapi import APIRouter, Query, HTTPException, Request, Depends
+from typing import List
+import traceback
+from enums.placeType import PlaceType
+from services.route_service import find_route, build_response_from_route
+from services.bike_route_service import find_full_routes
+
+from core.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from crud.bicycle_station import fetch_top_n_bike_stations
+from crud.public_toilet import fetch_closest_public_toilet
+
+from models.base_response import BaseResponse
+from models.route_response import RouteResponseDto
+
+router = APIRouter(
+    prefix= "/route"
+)
+
+@router.get("/walk", response_model=BaseResponse[RouteResponseDto])
+async def get_route(
+    request: Request,
+    from_lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
+    from_lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
+    to_lat: float = Query(..., ge=-90, le=90, description="도착지 위도"),
+    to_lon: float = Query(..., ge=-180, le=180, description="도착지 경도")
+):
+    try:
+        route = find_route(request.app.state.G_walk, from_lat, from_lon, to_lat, to_lon)
+        result =  build_response_from_route(request.app.state.POIs, request.app.state.G_walk, route)
+
+        return BaseResponse(status=200, message="success", data=result)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/bike", response_model=BaseResponse[List[RouteResponseDto]])
+async def get_bike_from_nearest(
+    lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
+    lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
+    max_minutes: int = Query(20, ge=10, le=160),
+    db: AsyncSession = Depends(get_db),
+    request: Request = None
+):
+    result = await find_full_routes(db, request, lat, lon, max_minutes)
+    return BaseResponse(status=200, message="success", data=result)
+    
+@router.get("/nearby", response_model=BaseResponse[RouteResponseDto])
+async def get_bike_from_nearest(
+    lat: float = Query(..., ge=-90, le=90, description="출발지 위도"),
+    lon: float = Query(..., ge=-180, le=180, description="출발지 경도"),
+    place_type: PlaceType = Query(...),
+    db: AsyncSession = Depends(get_db),
+    request: Request = None
+):
+    if place_type == PlaceType.rental:
+        places = await fetch_top_n_bike_stations(db, lat=lat, lon=lon, limit=1)
+        place = places[0]
+        end_addr = place.name + '대여소'
+    elif place_type == PlaceType.toilet:
+        place = await fetch_closest_public_toilet(db, lat=lat, lon=lon)
+        end_addr = place.name
+    else:
+        return BaseResponse(status=400, message="지원되지 않는 장소 타입: toilet, retal만 요청하세요.") 
+    if place is None:
+        raise HTTPException(status_code=404, detail="No nearby place found")
+    
+    route : RouteResponseDto = find_route(
+        request.app.state.G_walk,
+        from_lat=lat,
+        from_lon=lon,
+        to_lat=float(place.lat),   # Decimal → float
+        to_lon=float(place.lon)
+    )
+   
+    result = build_response_from_route(request.app.state.POIs, request.app.state.G_walk, route)
+    result.end_addr = end_addr
+
+    return BaseResponse(status=200, message="success", data=result)
