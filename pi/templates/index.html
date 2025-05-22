@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HELPMET Streaming</title>
+  <style>
+    body { margin: 0; background: #000; width:100vw; height: 100vh; }
+    video { width: 100%; object-fit: contain; }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay playsinline muted></video>
+  <script>
+  const video = document.getElementById("video");
+
+  let ws = null;
+  let pc = null;
+
+
+  let isCleaningUp = false;
+  let reconnectPending = false;
+  
+  function cleanup() {
+    console.log("🧹 cleanup 시작");
+    isCleaningUp = true;
+
+    try {
+      if (pc) {
+        pc.close();
+        console.log("✅ RTCPeerConnection 닫힘");
+      }
+    } catch (e) {
+      console.warn("RTCPeerConnection close 실패", e);
+    }
+    pc = null;
+
+    try {
+      if (ws) {
+        ws.close();
+        console.log("✅ WebSocket 닫힘");
+      }
+    } catch (e) {
+      console.warn("WebSocket close 실패", e);
+    }
+    ws = null;
+
+    // ✅ cleanup 이후 리소스 완전 해제 시간 확보
+    setTimeout(() => {
+      isCleaningUp = false;
+      console.log("✅ cleanup 완료");
+
+      if (reconnectPending) {
+        reconnectPending = false;
+        console.log("⏳ 대기 중이던 재연결 실행");
+        safeStart();
+      }
+    }, 500); // ✅ 최소 500ms는 기다려야 Android WebView 리소스가 완전히 해제됨
+  }
+
+
+ function safeStart() {
+    if (isCleaningUp) {
+      console.log("🕒 cleanup 중이므로 재연결 대기");
+      reconnectPending = true;
+      return;
+    }
+
+    setupWebSocket();
+    setupWebRTC();
+  }
+
+  function setupWebSocket() {
+    const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+    ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("WS 메시지 수신:", data);
+    };
+
+    ws.onclose = () => {
+      setTimeout(safeStart, 2000);
+    };
+  }
+
+  async function setupWebRTC() {
+    pc = new RTCPeerConnection();
+    pc.addTransceiver("video", { direction: "recvonly" });
+
+    pc.ontrack = (event) => {
+        video.srcObject = event.streams[0];
+  	video.play()
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+        cleanup();
+        reconnectPending = true;
+      }
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    const res = await fetch("/offer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sdp: pc.localDescription.sdp,
+        type: pc.localDescription.type
+      })
+    });
+    const answer = await res.json();
+    await pc.setRemoteDescription(answer);
+  }
+
+  safeStart();
+</script>
+
+</body>
+</html>

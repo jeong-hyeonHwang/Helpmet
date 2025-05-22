@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HELPMET Streaming</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #000; }
+    video { width: 100vw; height: 100vh; object-fit: contain; background: rgba(112, 123, 33, 0.5); }
+    .status { position: absolute; top: 0; left: 0; color: white; background: rgba(0, 0, 0, 0.5); padding: 10px; }
+    .temp { bottom: 0; left: 0; color: white;}
+  </style>
+</head>
+<body>
+  <div class="status" id="status">Connecting...</div>
+  <video id="video" autoplay playsinline muted></video>
+  <div class="temp" id="temp">Connecting2...</div>
+  <script>
+    const video = document.getElementById("video");
+    const statusPanel = document.getElementById("status");
+    const tempPanel = document.getElementById("temp");
+    let ws = null;
+    let pc = null;
+
+    function setupWebSocket() {
+      const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => { statusPanel.textContent = "WebSocket 연결됨"; tempPanel.textContent = "WebSocket 연결됨2";};
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("WS 메시지 수신:", data);
+      };
+      ws.onclose = () => {
+        statusPanel.textContent = "WebSocket 연결 끊김";
+        tempPanel.textContent = "WebSocket 연결 끊김2";
+        setTimeout(setupWebSocket, 5000);
+      };
+    }
+
+    async function setupWebRTC() {
+      pc = new RTCPeerConnection();
+      pc.addTransceiver("video", { direction: "recvonly" });
+
+      pc.ontrack = (event) => {
+        video.srcObject = event.streams[0];
+        video.play();
+        statusPanel.textContent = "스트리밍 연결됨";
+        tempPanel.textContent = "스트리밍 연결됨2";
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+          statusPanel.textContent = "WebRTC 재연결 중...";
+          tempPanel.textContent = "WebRTC 재연결 중2...";
+          setTimeout(setupWebRTC, 5000);
+        }
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      const res = await fetch("/offer", {
+        method: "POST",
+       headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sdp: pc.localDescription.sdp,
+          type: pc.localDescription.type
+        })
+      });
+      const answer = await res.json();
+      a</body>
+</html>

@@ -1,0 +1,314 @@
+
+import asyncio
+import json
+import cv2
+import traceback
+import numpy as np
+import time
+from av import VideoFrame
+from aiohttp import web
+from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
+import base64
+import os
+from arrow import arrow_loop, turn_on_arrow, turn_off_arrow
+
+
+websockets = set()
+
+pcs = set()
+is_speaking = False
+camera_instances = []
+
+async def broadcast_frame_to_websockets(frame, websockets):
+    if not websockets:
+        return
+    try:
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
+        _, buffer = cv2.imencode('.jpg', frame, encode_param)
+        jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+        message = {
+            "type": "frame",
+            "data": jpg_as_text,
+            "timestamp": round(time.time() * 1000)
+        }
+        data = json.dumps(message)
+        await asyncio.gather(*[ws.send_str(data) for ws in websockets])
+    except Exception as e:
+        print(f"[오류] 프레임 전송 중 오류 발생: {str(e)}")
+
+
+async def broadcast_playing_to_websockets(state, ws):
+    if not websockets:
+        return
+    try:
+        message = {
+            "type": "speaking",
+            "is_speaking": state
+        }
+        data = json.dumps(message)
+        await ws.send_str(data)
+    except Exception as e:
+        print(f"[오류] Speaking Lock 전송 중 오류 발생: {str(e)}")
+
+async def play_audio_async(filepath, ws):
+    global is_speaking
+    if is_speaking:
+        print(f"[음성] 이미 재생 중: {filepath} 무시됨")
+        return
+    is_speaking = True
+    try:
+        await broadcast_playing_to_websockets(is_speaking, ws)
+        print(f"[음성] 재생 시작: {filepath}")
+        process = await asyncio.create_subprocess_exec("mpg123", "-a", "plughw:1,0", filepath)
+        await process.wait()
+    finally:
+        is_speaking = False
+        await broadcast_playing_to_websockets(is_speaking, ws)
+        print(f"[음성] 재생 완료: {filepath}")
+
+
+
+class CameraStreamTrack(VideoStreamTrack):
+    def __init__(self):
+        super().__init__()
+
+        global camera_instances
+        camera_instances.append(self)
+        print(f"[카메라] CameraStreamTrack 생성됨 — 현재 인스턴스 수: {len(camera_instances)}")
+
+        if self.cap.isOpened():
+            print("[카메라] VideoCapture 열림 ✅")
+        else:
+            print("[카메라] VideoCapture 열기 실패 ❌")
+
+        self.frame_id = 0
+        self.fps_counter = 0
+        self.fps_timer = time.time()
+        self.fps = 0
+
+        retries = 5
+        for i in range(retries):
+            print(f"[카메라] GStreamer 방식 시도 중 ({i+1}/{retries})")
+            self.cap = cv2.VideoCapture(
+                "v4l2src device=/dev/video0 ! video/x-raw,width=640,height=480,framerate=15/1 ! "
+                "videoconvert ! video/x-raw,format=BGR ! appsink",
+                cv2.CAP_GSTREAMER
+            )
+            if self.cap.isOpened():
+                print("[카메라] GStreamer 방식 성공")
+                break
+            time.sleep(0.3)
+
+        if not self.cap.isOpened():
+            print("[카메라] GStreamer 실패. 일반 모드 시도.")
+            self.cap = cv2.VideoCapture(0)
+            if not self.cap.isOpened():
+                print("[카메라] fallback도 실패")
+                raise RuntimeError("카메라를 열 수 없습니다.")
+            else:
+                print("[카메라] fallback 방식 성공")
+
+        print("[카메라] 초기화 완료")
+
+
+
+    async def recv(self):
+        pts, time_base = await self.next_timestamp()
+        ret, frame = self.cap.read()
+        if not ret:
+            print("[카메라] 프레임 읽기 실패")
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+
+        self.frame_id += 1
+        if self.frame_id % 6 == 1 and websockets:
+            await broadcast_frame_to_websockets(frame, websockets)
+
+        video_frame = VideoFrame.from_ndarray(frame, format="bgr24")
+        video_frame.pts = pts
+        video_frame.time_base = time_base
+        return video_frame
+
+    def stop(self):
+
+        global camera_instances
+        print("[카메라] stop() 호출됨")
+        if self in camera_instances:
+            camera_instances.remove(self)
+
+        if self.cap and self.cap.isOpened():
+            self.cap.release()
+            print("[카메라] cap.release() 완료")
+        super().stop()
+
+routes = web.RouteTableDef()
+
+
+
+@routes.get("/")
+async def index(request):
+    with open("templates/index.html", "r", encoding="utf-8") as f:
+        content = f.read()
+    return web.Response(text=content, content_type="text/html")
+
+@routes.get("/ws")
+async def websocket_handler(request):
+    print("[WS] 연결 요청")
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+    websockets.add(ws)
+    print(f"[WS] 연결됨 (총 {len(websockets)})")
+    try:
+        async for msg in ws:
+            if msg.type == web.WSMsgType.TEXT:
+                try:
+                    data = json.loads(msg.data)
+                    msg_type = data.get("type")
+                    if msg_type == "turn_left":
+                        if data.get("command") == "start":
+                            turn_on_arrow(0)
+                        elif data.get("command") == "stop":
+                            turn_off_arrow(0)
+                    elif msg_type == "turn_right":
+                        if data.get("command") == "start":
+                            turn_on_arrow(1)
+                        elif data.get("command") == "stop":
+                            turn_off_arrow(1)
+                    elif msg_type == "turn_off":
+                        cmd = data.get("command")
+                        if cmd == "left" or cmd == "both":
+                            turn_off_arrow(0)
+                        if cmd == "right" or cmd == "both":
+                            turn_off_arrow(1)
+                    elif msg_type == "PERSON_DETECTED":
+                        level = data.get("level")
+                        if level == 1:
+                            asyncio.create_task(play_audio_async("person_1.mp3", ws))
+                        elif level == 2:
+                            asyncio.create_task(play_audio_async("person_2.mp3", ws))
+                    elif msg_type == "CAR_DETECTED":
+                        level = data.get("level")
+                        if level == 1:
+                            asyncio.create_task(play_audio_async("car_1.mp3", ws))
+                        elif level == 2:
+                            asyncio.create_task(play_audio_async("car_2.mp3", ws))
+                    elif msg_type == "BICYCLE_DETECTED":
+                        level = data.get("level")
+                        if level == 1:
+                            asyncio.create_task(play_audio_async("bicycle_1.mp3", ws))
+                        elif level == 2:
+                            asyncio.create_task(play_audio_async("bicycle_2.mp3", ws))
+                except Exception as e:
+                    print(f"[WS] 메시지 처리 오류: {e}")
+    finally:
+        websockets.remove(ws)
+        print(f"[WS] 연결 해제됨 (총 {len(websockets)})")
+    return ws
+
+
+
+@routes.post("/offer")
+async def offer(request):
+
+    global camera_instances
+
+    print(f"[RTC] /offer 요청 진입")
+    print(f"[RTC] 현재 RTCPeerConnection 수: {len(pcs)}")
+    print(f"[RTC] CameraStreamTrack 인스턴스 수: {len(camera_instances)}")
+    print(f"[RTC] camera_in_use 락 상태: {'잠김' if camera_in_use.locked() else '해제됨'}")
+
+
+    app = request.app
+    camera_in_use = app['camera_in_use']
+    params = await request.json()
+    offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
+    pc = RTCPeerConnection()
+    pcs.add(pc)
+    await camera_in_use.acquire()
+    print(f"[RTC] 연결 생성 (총 {len(pcs)})")
+    try:
+        video = CameraStreamTrack()
+        pc.addTrack(video)
+    except RuntimeError as e:
+        print(f"[에러] 카메라 실패: {e}")
+        await pc.close()
+        pcs.discard(pc)
+        camera_in_use.release()
+        return web.Response(status=500, text="카메라 열기 실패")
+    @pc.on("connectionstatechange")
+    async def on_connectionstatechange():
+        print(f"[RTC] 상태: {pc.connectionState}")
+        if pc.connectionState in ["closed", "failed", "disconnected"]:
+            await video.stop()
+            await pc.close()
+            pcs.discard(pc)
+            if camera_in_use.locked():
+                camera_in_use.release()
+                print("[RTC] camera_in_use.release() 호출됨")
+    await pc.setRemoteDescription(offer)
+    answer = await pc.createAnswer()
+    await pc.setLocalDescription(answer)
+    return web.json_response({
+        "sdp": pc.localDescription.sdp,
+        "type": pc.localDescription.type
+    })
+
+
+
+@routes.post("/disconnect")
+async def disconnect(request):
+    print("[클라이언트] 연결 끊기 요청")
+    for pc in list(pcs):
+        await pc.close()
+        pcs.discard(pc)
+    for ws in list(websockets):
+        websockets.discard(ws)
+    return web.Response(text="Disconnected")
+
+@routes.get("/info")
+async def get_info(request):
+    isAccess = True
+    if len(websockets) >= 1:
+        isAccess = False
+    return web.json_response({"serviceName": "HELPMET", "isAccess": isAccess})
+
+async def start_arrow_loop(app):
+    app['arrow_task'] = asyncio.create_task(arrow_loop())
+
+async def cleanup(app):
+    print("[메인] 리소스 정리 중...")
+    for pc in list(pcs):
+        await pc.close()
+        pcs.discard(pc)
+    if 'camera_in_use' in app and app['camera_in_use'].locked():
+        app['camera_in_use'].release()
+        print("[메인] camera_in_use 강제 해제")
+    arrow_task = app.get('arrow_task')
+    if arrow_task:
+        arrow_task.cancel()
+        try:
+            await arrow_task
+        except asyncio.CancelledError:
+            print("arrow_loop() 작업이 취소됨")
+
+async def setup_camera_lock(app):
+    app['camera_in_use'] = asyncio.Lock()
+
+def create_app():
+    app = web.Application()
+    app.add_routes(routes)
+    app.on_startup.append(setup_camera_lock)
+    app.on_startup.append(start_arrow_loop)
+    app.on_shutdown.append(cleanup)
+    return app
+
+if __name__ == "__main__":
+    try:
+        print("==== HELPMET 스트리밍 서버 시작 ====")
+        web.run_app(create_app(), host="0.0.0.0", port=8081)
+    except KeyboardInterrupt:
+        print("종료 요청 수신됨")
+    except Exception as e:
+        print(f"서버 오류: {e}")
+        traceback.print_exc()
+    finally:
+        print("서버가 종료되었습니다.")

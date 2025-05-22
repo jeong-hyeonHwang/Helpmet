@@ -1,0 +1,67 @@
+# Python 바이트 코드
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 가상환경
+venv/
+ENV/
+env/
+.venv/
+*.egg-info/
+
+# 로그 파일 및 캐시
+*.log
+*.tmp
+*.swp
+*.bak
+*.pid
+
+# IDE 및 에디터 설정 파일
+.vscode/
+.idea/
+*.code-workspace
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
+
+# 빌드 출력물
+build/
+dist/
+*.o
+*.out
+*.so
+*.a
+
+# 설정 파일 (민감한 정보 포함 가능)
+*.conf
+*.ini
+*.cfg
+*.db
+*.sqlite
+secrets.env
+.env
+
+# Raspberry Pi 특화
+# 예: 실행 시 생성되는 이미지, 센서 데이터, 임시 파일 등
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.mp4
+*.avi
+*.h264
+*.npy
+*.csv
+*.json
+data/
+output/
+logs/
+recordings/
+
+./webrtc_venv/
+./__pycache__
+./.venv/
+venv
+webrtc_venv
